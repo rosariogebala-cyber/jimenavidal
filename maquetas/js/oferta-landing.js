@@ -202,10 +202,9 @@
   window.addEventListener("resize", medirSolape);
 
   var GRUPOS_FILTRO = [
-    { modo: "todos", items: [["aereo", "Vuelo"], ["equipaje", "Equipaje"], ["traslado", "Traslados"], ["excursion", "Visitas"], ["guia", "Guía en español"], ["hotel", "Alojamiento"], ["desayuno", "Desayuno"], ["asistencia", "Asistencia"]] },
-    { modo: "alguno", items: [["media-pension", "Media pensión"], ["all-inclusive", "All inclusive"]] },
     { modo: "alguno", items: [["directo", "Vuelo directo"], ["con-escala", "Vuelo con escala"]] },
-    { modo: "alguno", items: [["noches-corta", "Hasta 5 noches"], ["noches-media", "6 a 9 noches"], ["noches-larga", "10 noches o más"]] }
+    { modo: "alguno", items: [["all-inclusive", "All inclusive"], ["media-pension", "Media pensión"], ["desayuno", "Desayuno"]] },
+    { modo: "alguno", items: [["noches-5", "Hasta 5 noches"], ["noches-10", "Hasta 10 noches"]] }
   ];
   var filtrosActivos = {};
 
