@@ -61,7 +61,9 @@
     "#productos .jv-chip-limpiar{border:0;background:none;color:#0b1f38;font-size:.88rem;font-weight:600;text-decoration:underline;text-underline-offset:3px;padding:7px 4px;cursor:pointer;white-space:nowrap}",
     "#productos .jv-filtros-vacio{margin:16px 0 0;color:#5b6b80}",
     "#productos .jv-filtros-vacio button{border:0;background:none;padding:0;color:#e4570a;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer}",
-    "@media (max-width:991.98px){#productos .jv-filtros-fila,#productos .jv-filtros-grupo{flex-wrap:nowrap}#productos .jv-filtros-fila{overflow-x:auto;scrollbar-width:none;margin:0 calc(var(--bs-gutter-x,1.5rem) * -.5);padding:2px calc(var(--bs-gutter-x,1.5rem) * .5);mask-image:linear-gradient(90deg,#000 85%,transparent)}#productos .jv-filtros-fila::-webkit-scrollbar{display:none}}",
+    "#productos .jv-chip-n{margin-left:5px;font-weight:500;opacity:.55}",
+    "#productos .jv-chip.is-on .jv-chip-n{opacity:.85}",
+    "@media (max-width:991.98px){#productos .jv-filtros-fila{gap:8px}#productos .jv-filtros-grupo{display:contents}#productos .jv-chip{padding:6px 12px;font-size:.84rem}}",
     "@media (prefers-reduced-motion:reduce){#productos .jv-chip{transition:none}}",
     "#productos .jv-sobre-hero{position:relative;z-index:3;margin-top:calc(var(--jv-solape) * -1)}",
     "#productos .jv-sobre-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}",
@@ -243,6 +245,20 @@
     caja.querySelector("[data-limpiar]").hidden = !hay;
     var vacio = caja.querySelector("[data-vacio]");
     vacio.hidden = vistas > 0;
+    guardarEnLink();
+  }
+
+  function guardarEnLink() {
+    var activos = Object.keys(filtrosActivos).filter(function (k) { return filtrosActivos[k]; });
+    var hash = activos.length ? "#filtro=" + activos.join("+") : "";
+    if (!hash && location.hash.indexOf("#filtro=") !== 0) return;
+    if (hash === location.hash) return;
+    history.replaceState(null, "", location.pathname + location.search + hash);
+  }
+
+  var filtroDesdeLink = (location.hash.match(/^#filtro=([\w+-]+)$/) || [])[1];
+  if (filtroDesdeLink) {
+    filtroDesdeLink.split("+").forEach(function (k) { filtrosActivos[k] = true; });
   }
 
   function armarFiltros() {
@@ -253,8 +269,10 @@
       if (caja) caja.remove();
       return;
     }
+    var cuenta = {};
+    cards.forEach(function (card) { etiquetas(card).forEach(function (t) { cuenta[t] = (cuenta[t] || 0) + 1; }); });
     var presentes = {};
-    cards.forEach(function (card) { etiquetas(card).forEach(function (t) { presentes[t] = true; }); });
+    Object.keys(cuenta).forEach(function (t) { if (cuenta[t] < cards.length) presentes[t] = true; });
     if (!caja) {
       caja = document.createElement("div");
       caja.className = "jv-filtros";
@@ -267,7 +285,7 @@
       html.push('<span class="jv-filtros-grupo">');
       items.forEach(function (it) {
         var on = !!filtrosActivos[it[0]];
-        html.push('<button type="button" class="jv-chip' + (on ? " is-on" : "") + '" data-filtro="' + it[0] + '" aria-pressed="' + on + '">' + it[1] + "</button>");
+        html.push('<button type="button" class="jv-chip' + (on ? " is-on" : "") + '" data-filtro="' + it[0] + '" aria-pressed="' + on + '" aria-label="' + it[1] + ", " + cuenta[it[0]] + (cuenta[it[0]] === 1 ? " promo" : " promos") + '">' + it[1] + '<span class="jv-chip-n">' + cuenta[it[0]] + "</span></button>");
       });
       html.push("</span>");
     });
@@ -298,6 +316,17 @@
     }
   });
   armarFiltros();
+  if (filtroDesdeLink && document.querySelector("#productos .jv-chip.is-on")) {
+    var irAFiltros = function () {
+      var fila = document.querySelector("#productos .jv-filtros");
+      if (!fila) return;
+      var nav = document.querySelector(".navbar.fixed-top, header .navbar, .navbar");
+      var alto = nav ? nav.getBoundingClientRect().height : 0;
+      window.scrollTo(0, window.scrollY + fila.getBoundingClientRect().top - alto - 24);
+    };
+    if (document.readyState === "complete") irAFiltros();
+    else window.addEventListener("load", irAFiltros);
+  }
 
   var resenasPag = document.querySelector("#resenas-de-google [data-jv-resenas]");
   if (resenasPag) {
