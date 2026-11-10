@@ -84,6 +84,7 @@ video.jv-preview { background: #0b1f38; }
 .jg-bajar { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 2px !important; }
 .jg-bajar a { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: #3d2616; color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; }
 .jg-bajar a:first-child { background: #e4570a; }
+.jg-bajar a.jg-wa { background: #1f8f4e; }
 .jg-bajar a span { font-weight: 500; opacity: .8; }
 .jg-bajar a:focus-visible { outline: 2px solid #0b1f38; outline-offset: 2px; }
 .jg-bajar-espera { color: #7a5644; }

@@ -329,14 +329,51 @@
     return "";
   }
 
-  function descargas(pub) {
+  function descargas(pub, id) {
     if (pub.error) return "";
     if (!pub.reel) return '<p class="jg-bajar-espera">Las imágenes para bajar aparecen cuando termine de&nbsp;publicarse.</p>';
     return '<p class="jg-bajar">' +
       '<a href="../' + esc(pub.reel) + '" download="' + esc(pub.archivo_reel) + '"><i class="bi bi-download" aria-hidden="true"></i> Reel <span>1080×1920</span></a>' +
       '<a href="../' + esc(pub.post) + '" download="' + esc(pub.archivo_post) + '"><i class="bi bi-download" aria-hidden="true"></i> Post <span>1080×1350</span></a>' +
+      '<a href="#" class="jg-wa" data-wa="' + esc(id) + '"><i class="bi bi-whatsapp" aria-hidden="true"></i> WhatsApp</a>' +
       "</p>";
   }
+
+  function textoWhatsApp(o) {
+    var d = o.datos || {};
+    return [
+      d.destino,
+      estadia(d.noches),
+      Number(d.precio) ? "Desde " + precioTexto(d) : "",
+      "Más info: " + new URL("../", location.href).href
+    ].filter(Boolean).join("\n");
+  }
+
+  // Con imagen solo se puede compartir desde el celu (Web Share). En la compu va el texto por WhatsApp Web.
+  function enviarWhatsApp(id) {
+    var o = ofertaPor(id);
+    var pub = publicado.ofertas[id] || {};
+    var texto = textoWhatsApp(o);
+    var porTexto = function () {
+      window.open("https://wa.me/?text=" + encodeURIComponent(texto), "_blank", "noopener");
+    };
+    var celu = window.matchMedia("(pointer: coarse)").matches;
+    if (!celu || !navigator.canShare || !pub.reel) { porTexto(); return; }
+    fetch("../" + pub.reel).then(function (r) { return r.blob(); }).then(function (blob) {
+      var archivo = new File([blob], pub.archivo_reel || "reel.jpg", { type: "image/jpeg" });
+      if (!navigator.canShare({ files: [archivo] })) { porTexto(); return; }
+      return navigator.share({ files: [archivo], text: texto }).catch(function (err) {
+        if (err.name !== "AbortError") porTexto();
+      });
+    }).catch(porTexto);
+  }
+
+  document.addEventListener("click", function (e) {
+    var link = e.target.closest("[data-wa]");
+    if (!link) return;
+    e.preventDefault();
+    enviarWhatsApp(link.getAttribute("data-wa"));
+  });
 
   function fila(o, index, total, flags) {
     var d = o.datos || {};
@@ -358,7 +395,7 @@
       "<p>" + esc(precioTexto(d)) + "</p>",
       periodo(o),
       pub.error ? '<p class="jg-aviso">No se puede armar: ' + esc(pub.error) + "</p>" : "",
-      descargas(pub),
+      descargas(pub, o.id),
       "</div>",
       '<div class="jv-acts">',
       icono("edit", "Editar", "pencil"),
@@ -533,7 +570,7 @@
     var pub = o ? publicado.ofertas[o.id] : null;
     pieza.hidden = !(pub && pub.card);
     if (pub && pub.card) pieza.querySelector("img").src = "../" + pub.card;
-    pieza.querySelector("[data-bajar]").innerHTML = pub ? descargas(pub) : "";
+    pieza.querySelector("[data-bajar]").innerHTML = pub ? descargas(pub, o.id) : "";
     textoNoches();
     say(avisoForm, "");
     form.scrollIntoView({ behavior: "smooth", block: "start" });
