@@ -85,14 +85,11 @@
     "orden": 4,
     "foto": "77dbd128a2034e059b8c4e5684f59d8d.jpg",
     "datos": {
-      "hotel": "Ciudad Autónoma de Buenos Aires",
-      "vuelo": "con escala",
-      "fechas": "12jun al 19diciembre",
-      "moneda": "USD",
+      "destino": "santa teresita",
       "noches": 7,
       "origen": "",
-      "precio": 1899,
-      "destino": "santa teresita",
+      "fechas": "12jun al 19diciembre",
+      "vuelo": "con escala",
       "incluye": [
         "aereo",
         "equipaje",
@@ -102,10 +99,13 @@
         "asistencia"
       ],
       "regimen": "All inclusive",
-      "destacada": true,
-      "estrellas": 5,
+      "moneda": "USD",
+      "precio_antes": 2100,
+      "precio": 1899,
       "precio_nota": "Plan familiar (2 adulto + 1 menor hasta 11 años)",
-      "precio_antes": 2100
+      "hotel": "Ciudad Autónoma de Buenos Aires",
+      "estrellas": 5,
+      "destacada": true
     }
   },
   {
