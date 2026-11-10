@@ -165,5 +165,29 @@
       "precio_nota": "Plan familiar (2 adulto + 2 menores hasta 11 años)",
       "precio_antes": 4000
     }
+  },
+  {
+    "id": "cf10886d580b436eabae039e0743cd69",
+    "estado": "pendiente",
+    "orden": 1,
+    "foto": "cf10886d580b436eabae039e0743cd69.jpg",
+    "datos": {
+      "destino": "Prueba gestion",
+      "noches": 4,
+      "origen": "Rosario",
+      "fechas": "",
+      "vuelo": "",
+      "incluye": [
+        "aereo",
+        "hotel"
+      ],
+      "regimen": "",
+      "moneda": "USD",
+      "precio_antes": 0,
+      "precio": 999,
+      "precio_nota": "",
+      "hotel": "",
+      "estrellas": 0
+    }
   }
 ]
