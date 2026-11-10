@@ -1,6 +1,21 @@
 {
   "slides": [
     {
+      "id": "s67d1d0ea03",
+      "etiqueta": "",
+      "video": "",
+      "foto": "s67d1d0ea03.jpg",
+      "descripcion": "",
+      "lugar": "",
+      "titulo": "Hola!",
+      "destacado": "aca te lo explicamos",
+      "bajada": "",
+      "etiquetas": [],
+      "boton": "Quiero viajar",
+      "mensaje": "Hola, quiero consultar un pasaje al exterior",
+      "estilo": ""
+    },
+    {
       "id": "s1",
       "etiqueta": "Funes",
       "video": "https://videos.pexels.com/video-files/19957788/19957788-sd_960_540_30fps.mp4",
@@ -24,21 +39,6 @@
           "texto": "Check-in y equipaje"
         }
       ],
-      "boton": "Quiero viajar",
-      "mensaje": "Hola, quiero consultar un pasaje al exterior",
-      "estilo": ""
-    },
-    {
-      "id": "s67d1d0ea03",
-      "etiqueta": "",
-      "video": "",
-      "foto": "s67d1d0ea03.jpg",
-      "descripcion": "",
-      "lugar": "",
-      "titulo": "Hola!",
-      "destacado": "aca te lo explicamos",
-      "bajada": "",
-      "etiquetas": [],
       "boton": "Quiero viajar",
       "mensaje": "Hola, quiero consultar un pasaje al exterior",
       "estilo": ""
