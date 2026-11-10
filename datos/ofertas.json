@@ -192,5 +192,32 @@
       "estrellas": 0,
       "destacada": true
     }
+  },
+  {
+    "id": "6ebad917a04c433ab07e4b4991bf18a1",
+    "estado": "publicada",
+    "orden": 11,
+    "foto": "6ebad917a04c433ab07e4b4991bf18a1-mwbciafz.jpg",
+    "datos": {
+      "destino": "Norte Argentino",
+      "noches": 7,
+      "origen": "Aeroparque",
+      "fechas": "24 Diciembre al 31 Diciembre",
+      "vuelo": "directo",
+      "incluye": [
+        "aereo",
+        "traslado",
+        "excursion",
+        "hotel"
+      ],
+      "regimen": "Media pensión",
+      "moneda": "USD",
+      "precio_antes": 0,
+      "precio": 350,
+      "precio_nota": "",
+      "hotel": "",
+      "estrellas": 0
+    },
+    "hasta": "2026-11-11"
   }
 ]
