@@ -846,9 +846,37 @@ def render_reel(offer, brand, photo=None):
     image = canvas(REEL, photo)
     zona = paint_portada(image.crop((0, top, width, height - bottom)), offer, brand)
     image.paste(zona, (0, top))
-    if offer.get("flyer"):
-        image = _icon_shade(image, height - bottom)
-    return image
+    image = _icon_shade(image, height - bottom)
+    return paint_reel_footer(image, brand, height - bottom)
+
+
+def paint_reel_footer(image, brand, top):
+    """Pie del reel: monograma y nombre a la izquierda, botón de mensaje a la derecha."""
+    width, height = image.size
+    draw = ImageDraw.Draw(image)
+    radius = 50
+    name_face = font("Fraunces-SemiBold.ttf", 56)
+    label = "Dejanos tu mensaje"
+    button_face = font("Montserrat-Bold.ttf", 32)
+    name_w = text_width(draw, brand["nombre"], name_face)
+    label_box = draw.textbbox((0, 0), label, font=button_face)
+    pad_x, pad_y = 34, 22
+    button_w = label_box[2] - label_box[0] + pad_x * 2
+    button_h = label_box[3] - label_box[1] + pad_y * 2
+    mark_w = radius * 2 + 20 if brand.get("mark") else 0
+    gap = 48
+    row_w = mark_w + name_w + gap + button_w
+    cy = top + int((height - top) * 0.42)
+    x = (width - row_w) / 2
+    if brand.get("mark"):
+        draw_mark(image, int(x + radius), cy, radius, brand["orange"])
+        x += mark_w
+    name_box = draw.textbbox((0, 0), brand["nombre"], font=name_face)
+    image = letter(image, (x, cy - (name_box[1] + name_box[3]) / 2), brand["nombre"], name_face, WHITE, shadow=False)
+    bx = x + name_w + gap
+    box = (int(bx), int(cy - button_h / 2), int(bx + button_w), int(cy + button_h / 2))
+    ImageDraw.Draw(image).rounded_rectangle(box, radius=button_h // 2, fill=brand["orange"])
+    return center_text(image, box, label, button_face, INK, shadow=False)
 
 
 def reel_bytes(offer, brand, photo=None):
