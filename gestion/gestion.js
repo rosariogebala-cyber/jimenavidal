@@ -252,7 +252,7 @@
     if (!pub.reel) return '<p class="jg-bajar-espera">Las imágenes para bajar aparecen cuando termine de&nbsp;publicarse.</p>';
     return '<p class="jg-bajar">' +
       '<a href="../' + esc(pub.reel) + '" download="' + esc(pub.archivo_reel) + '"><i class="bi bi-download" aria-hidden="true"></i> Reel <span>1080×1920</span></a>' +
-      '<a href="../' + esc(pub.png) + '" download="' + esc(pub.archivo) + '"><i class="bi bi-download" aria-hidden="true"></i> Post <span>1080×1350</span></a>' +
+      '<a href="../' + esc(pub.post) + '" download="' + esc(pub.archivo_post) + '"><i class="bi bi-download" aria-hidden="true"></i> Post <span>1080×1350</span></a>' +
       "</p>";
   }
 
@@ -707,20 +707,42 @@
       "</div>",
       '<div class="jv-acts">',
       icono("edit", "Editar", "pencil"),
-      icono("up", "Subir", "arrow-up", index === 0 ? " disabled" : ""),
-      icono("down", "Bajar", "arrow-down", index === total - 1 ? " disabled" : ""),
-      icono("del", "Quitar", "trash", total <= 1 ? " disabled" : ""),
+      s.archivada
+        ? icono("restore", "Volver a mostrar", "arrow-counterclockwise") + icono("del", "Borrar para siempre", "trash")
+        : icono("up", "Subir", "arrow-up", index === 0 ? " disabled" : "") +
+          icono("down", "Bajar", "arrow-down", index === total - 1 ? " disabled" : "") +
+          icono("archive", "Archivar", "archive", total <= 1 ? ' disabled title="La portada necesita al menos una diapositiva"' : ""),
       "</div>"
     ].join("");
     return art;
   }
 
-  function renderPortada() {
-    var list = document.querySelector("[data-list-portada]");
-    var items = slides();
-    document.querySelector("[data-panel=portada] [data-cuenta]").textContent = items.length ? "(" + items.length + ")" : "";
+  function enPortada() {
+    return slides().filter(function (s) { return !s.archivada; });
+  }
+
+  function archivadas() {
+    return slides().filter(function (s) { return s.archivada; });
+  }
+
+  function listarPortada(list, items, vacio) {
     list.innerHTML = "";
+    if (!items.length) {
+      var p = document.createElement("p");
+      p.innerHTML = vacio;
+      list.appendChild(p);
+      return;
+    }
     items.forEach(function (s, i) { list.appendChild(filaPortada(s, i, items.length)); });
+  }
+
+  function renderPortada() {
+    var activas = enPortada();
+    var guardadas = archivadas();
+    document.querySelector("[data-panel=portada] [data-cuenta]").textContent = activas.length ? "(" + activas.length + ")" : "";
+    document.querySelector("[data-cuenta-archivadas]").textContent = guardadas.length ? "(" + guardadas.length + ")" : "";
+    listarPortada(document.querySelector("[data-list-portada]"), activas, "Sin diapositivas en la&nbsp;portada.");
+    listarPortada(document.querySelector("[data-list-archivadas]"), guardadas, "Sin diapositivas&nbsp;archivadas.");
   }
 
   function vistaMedio(s) {
@@ -813,6 +835,7 @@
       mensaje: formPortada.mensaje.value.trim(),
       estilo: formPortada.estilo.value
     };
+    if (anterior.archivada) datos.archivada = true;
     var foto = fotoPortada;
     var esNueva = !editandoPortada;
     var botones = formPortada.querySelectorAll("button");
@@ -844,7 +867,7 @@
     });
   });
 
-  document.querySelector("[data-list-portada]").addEventListener("click", function (e) {
+  document.querySelector("[data-cols-portada]").addEventListener("click", function (e) {
     var button = e.target.closest("button[data-act]");
     if (!button || button.disabled) return;
     var id = button.closest(".jv-item").getAttribute("data-id");
@@ -860,23 +883,43 @@
       job = guardarPortada(function (data) {
         var lista = data.slides || [];
         var i = lista.findIndex(function (x) { return x.id === id; });
+        if (i === -1) return;
         var j = i + dir;
-        if (i === -1 || j < 0 || j >= lista.length) return;
+        while (j >= 0 && j < lista.length && lista[j].archivada) j += dir;
+        if (j < 0 || j >= lista.length) return;
         var tmp = lista[i];
         lista[i] = lista[j];
         lista[j] = tmp;
       }, "ordena diapositiva " + nombreSlide);
     }
-    if (act === "del") {
-      if (!window.confirm("¿Quitás la diapositiva \"" + nombreSlide + "\"?")) return;
+    if (act === "archive") {
       job = guardarPortada(function (data) {
         var lista = data.slides || [];
-        if (lista.length <= 1) throw new Error("La portada necesita al menos una diapositiva.");
+        var activas = lista.filter(function (x) { return !x.archivada; });
+        if (activas.length <= 1) throw new Error("La portada necesita al menos una diapositiva.");
+        var slide = lista.filter(function (x) { return x.id === id; })[0];
+        if (slide) slide.archivada = true;
+      }, "archiva diapositiva " + nombreSlide);
+    }
+    if (act === "restore") {
+      job = guardarPortada(function (data) {
+        var lista = data.slides || [];
         var i = lista.findIndex(function (x) { return x.id === id; });
         if (i === -1) return;
+        var slide = lista.splice(i, 1)[0];
+        delete slide.archivada;
+        lista.push(slide);
+      }, "vuelve a mostrar diapositiva " + nombreSlide);
+    }
+    if (act === "del") {
+      if (!window.confirm("¿Borrás para siempre la diapositiva \"" + nombreSlide + "\"? No se puede deshacer.")) return;
+      job = guardarPortada(function (data) {
+        var lista = data.slides || [];
+        var i = lista.findIndex(function (x) { return x.id === id; });
+        if (i === -1 || !lista[i].archivada) return;
         var quitada = lista.splice(i, 1)[0];
         return { borrar: quitada.foto ? ["datos/hero/" + quitada.foto] : [] };
-      }, "quita diapositiva " + nombreSlide);
+      }, "borra diapositiva " + nombreSlide);
     }
     if (!job) return;
     ocupado = true;

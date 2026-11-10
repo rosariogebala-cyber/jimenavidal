@@ -173,11 +173,18 @@
         <p class="jv-msg" data-form-msg role="status"></p>
       </form>
 
-      <section class="jv-col">
-        <h2>Diapositivas<span class="jg-cuenta" data-cuenta></span></h2>
-        <p class="jv-hint">Se muestran en este orden. La primera es la que se ve al&nbsp;entrar.</p>
-        <div data-list-portada></div>
-      </section>
+      <div class="jv-cols" data-cols-portada>
+        <section class="jv-col">
+          <h2>En la portada<span class="jg-cuenta" data-cuenta></span></h2>
+          <p class="jv-hint">Se muestran en este orden. La primera es la que se ve al&nbsp;entrar.</p>
+          <div data-list-portada></div>
+        </section>
+        <section class="jv-col">
+          <h2>Archivadas<span class="jg-cuenta" data-cuenta-archivadas></span></h2>
+          <p class="jv-hint">No se ven en el sitio. Podés volver a mostrarlas cuando&nbsp;quieras.</p>
+          <div data-list-archivadas></div>
+        </section>
+      </div>
     </div>
   </div>
 </main>

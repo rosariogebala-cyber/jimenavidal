@@ -828,10 +828,15 @@ def preview_bytes(offer, brand, photo=None):
     return out.getvalue()
 
 
-def png_bytes(offer, brand, photo=None):
+def jpeg_alta(image):
+    """Para bajar y subir a Instagram: sin submuestreo de color, así el texto queda nítido."""
     out = io.BytesIO()
-    render(offer, brand, STORY, photo).save(out, "PNG", optimize=True)
+    image.save(out, "JPEG", quality=92, subsampling=0, optimize=True)
     return out.getvalue()
+
+
+def post_bytes(offer, brand, photo=None):
+    return jpeg_alta(render(offer, brand, STORY, photo))
 
 
 def render_reel(offer, brand, photo=None):
@@ -847,9 +852,7 @@ def render_reel(offer, brand, photo=None):
 
 
 def reel_bytes(offer, brand, photo=None):
-    out = io.BytesIO()
-    render_reel(offer, brand, photo).save(out, "PNG", optimize=True)
-    return out.getvalue()
+    return jpeg_alta(render_reel(offer, brand, photo))
 
 
 def card_bytes(offer, brand, photo=None):

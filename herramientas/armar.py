@@ -88,19 +88,19 @@ def piezas_de(sitio, ofertas, html):
                 with open(ruta_foto, "rb") as f:
                     foto = piezas.photo_from_bytes(f.read())
         card = piezas.card_bytes(offer, brand, foto)
-        png = piezas.png_bytes(offer, brand, foto)
+        post = piezas.post_bytes(offer, brand, foto)
         reel = piezas.reel_bytes(offer, brand, foto)
         escribir(os.path.join(SALIDA, "img", "ofertas", item["id"] + ".jpg"), card)
-        escribir(os.path.join(SALIDA, "piezas", item["id"] + ".png"), png)
-        escribir(os.path.join(SALIDA, "piezas", item["id"] + "-reel.png"), reel)
+        escribir(os.path.join(SALIDA, "piezas", item["id"] + "-post.jpg"), post)
+        escribir(os.path.join(SALIDA, "piezas", item["id"] + "-reel.jpg"), reel)
         src = "img/ofertas/%s.jpg?v=%s" % (item["id"], huella(card))
         nombre = "jimena-vidal-%s" % slug(offer["destino"])
         estado[item["id"]] = {
             "card": src,
-            "png": "piezas/%s.png?v=%s" % (item["id"], huella(png)),
-            "archivo": nombre + "-post.png",
-            "reel": "piezas/%s-reel.png?v=%s" % (item["id"], huella(reel)),
-            "archivo_reel": nombre + "-reel.png",
+            "post": "piezas/%s-post.jpg?v=%s" % (item["id"], huella(post)),
+            "archivo_post": nombre + "-post.jpg",
+            "reel": "piezas/%s-reel.jpg?v=%s" % (item["id"], huella(reel)),
+            "archivo_reel": nombre + "-reel.jpg",
         }
         if item["id"] in ids_publicadas:
             href = piezas.offer_href(html, offer["destino"], offer["estadia"], offer.get("fechas", ""), offer.get("precio", ""))
@@ -128,7 +128,7 @@ def portada(html):
     if not os.path.exists(ruta):
         return html
     with open(ruta, encoding="utf-8") as f:
-        slides = [s for s in json.load(f).get("slides", []) if s.get("video") or s.get("foto")]
+        slides = [s for s in json.load(f).get("slides", []) if not s.get("archivada") and (s.get("video") or s.get("foto"))]
     if not slides or not HERO_RE.search(html):
         return html
     telefono = (re.search(r"wa\.me/(\d+)", html) or [None, ""])[1]
@@ -201,16 +201,6 @@ document.querySelectorAll("[data-mailto-form]").forEach(function (form) {
 </script>""" % EMAIL
 
 
-def copiar(ruta):
-    origen = os.path.join(REPO, ruta)
-    if not os.path.exists(origen):
-        print("  falta %s" % ruta)
-        return
-    destino = os.path.join(SALIDA, ruta)
-    os.makedirs(os.path.dirname(destino), exist_ok=True)
-    shutil.copy2(origen, destino)
-
-
 def armar():
     sitio = leer_json("sitio.json")
     ofertas = leer_json("ofertas.json")
@@ -227,29 +217,22 @@ def armar():
     if html is None:
         sys.exit("La landing no tiene sección de promociones.")
 
-    with open(os.path.join(REPO, "maquetas", "js", "oferta-landing.js"), "rb") as f:
-        version = huella(f.read())
-    html = re.sub(r"<html\b", "<html data-estatico", html, count=1)
     html = html.replace("</head>", cabecera(sitio) + "</head>", 1)
     html = html.replace("data-demo-form", "data-mailto-form")
-    html = html.replace(
-        "</body>",
-        '<script src="maquetas/js/oferta-landing.js?v=%s"></script>%s</body>' % (version, MAILTO),
-        1,
-    )
+    html = html.replace("</body>", '<script src="/assets/js/ofertas.js"></script>%s</body>' % MAILTO, 1)
 
-    rutas = set()
+    def con_version(m):
+        ruta = m.group(2).split("?", 1)[0].lstrip("/")
+        origen = os.path.join(REPO, ruta)
+        if not os.path.exists(origen):
+            sys.exit("Falta %s" % ruta)
+        if ruta.endswith((".css", ".js")):
+            with open(origen, "rb") as f:
+                ruta += "?v=" + huella(f.read())
+        return m.group(1) + ruta
 
-    def relativa(m):
-        ruta = m.group(2)
-        rutas.add(ruta.split("?", 1)[0].lstrip("/"))
-        return m.group(1) + ruta.lstrip("/")
-
-    html = re.sub(r'((?:src|href|poster)=")(/maquetas/[^"]+)', relativa, html)
-    for ruta in sorted(rutas | {"maquetas/js/oferta-landing.js", "assets/modulos/navegacion/compleja.png"}):
-        copiar(ruta)
-    if sitio.get("imagen"):
-        copiar(sitio["imagen"].lstrip("/"))
+    html = re.sub(r'((?:src|href|poster)=")(/assets/[^"]+)', con_version, html)
+    shutil.copytree(os.path.join(REPO, "assets"), os.path.join(SALIDA, "assets"))
 
     gestion = os.path.join(SALIDA, "gestion")
     shutil.copytree(os.path.join(REPO, "gestion"), gestion)
