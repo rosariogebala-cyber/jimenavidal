@@ -11,11 +11,13 @@
   var LADO_PORTADA = 1920;
   var OFERTAS = "datos/ofertas.json";
   var PORTADA = "datos/hero.json";
+  var CONTACTO = "datos/contacto.json";
   var SIN_PERMISO = "Esta clave puede ver pero no guardar. En GitHub, editá la clave y en Permissions → Contents elegí Read and write. Después tocá Salir y volvé a entrar.";
 
   var token = localStorage.getItem(CLAVE) || sessionStorage.getItem(CLAVE) || "";
   var ofertas = [];
   var portada = { slides: [] };
+  var contacto = {};
   var publicado = { commit: "", ofertas: {} };
   var ultimoCommit = "";
   var vigilando = null;
@@ -130,11 +132,12 @@
     });
   }
 
-  var LEER = "query($duenio: String!, $nombre: String!, $rama: String!, $ofertas: String!, $portada: String!) {" +
+  var LEER = "query($duenio: String!, $nombre: String!, $rama: String!, $ofertas: String!, $portada: String!, $contacto: String!) {" +
     " repository(owner: $duenio, name: $nombre) {" +
     " ref(qualifiedName: $rama) { target { oid } }" +
     " ofertas: object(expression: $ofertas) { ... on Blob { text } }" +
-    " portada: object(expression: $portada) { ... on Blob { text } } } }";
+    " portada: object(expression: $portada) { ... on Blob { text } }" +
+    " contacto: object(expression: $contacto) { ... on Blob { text } } } }";
 
   var GUARDAR = "mutation($input: CreateCommitOnBranchInput!) { createCommitOnBranch(input: $input) { commit { oid } } }";
 
@@ -145,14 +148,16 @@
       nombre: REPO.split("/")[1],
       rama: "refs/heads/" + RAMA,
       ofertas: RAMA + ":" + OFERTAS,
-      portada: RAMA + ":" + PORTADA
+      portada: RAMA + ":" + PORTADA,
+      contacto: RAMA + ":" + CONTACTO
     }).then(function (data) {
       var repo = data.repository;
       if (!repo || !repo.ref) throw new Error(SIN_PERMISO);
       return {
         commit: repo.ref.target.oid,
         ofertas: repo.ofertas ? JSON.parse(repo.ofertas.text) : [],
-        portada: repo.portada ? JSON.parse(repo.portada.text) : { slides: [] }
+        portada: repo.portada ? JSON.parse(repo.portada.text) : { slides: [] },
+        contacto: repo.contacto ? JSON.parse(repo.contacto.text) : {}
       };
     });
   }
@@ -208,7 +213,7 @@
   function guardarEn(ruta, cambio, mensaje, intento, sinBorrar) {
     var lista;
     return leerTodo().then(function (actual) {
-      lista = ruta === OFERTAS ? actual.ofertas : actual.portada;
+      lista = ruta === OFERTAS ? actual.ofertas : ruta === CONTACTO ? actual.contacto : actual.portada;
       var extra = cambio(lista) || {};
       var altas = (extra.archivos || []).map(function (a) { return { path: a.path, contents: a.base64 }; });
       altas.push({ path: ruta, contents: base64DeTexto(JSON.stringify(lista, null, 2) + "\n") });
@@ -456,8 +461,10 @@
       .then(function (res) {
         ofertas = res[0].ofertas;
         portada = res[0].portada;
+        contacto = res[0].contacto;
         render();
         renderPortada();
+        llenarContacto();
         say(avisoApp, "");
         if (publicado.commit && publicado.commit !== res[0].commit) {
           ultimoCommit = res[0].commit;
@@ -1107,6 +1114,61 @@
     });
   });
 
+  /* Contacto */
+
+  var formContacto = document.querySelector("[data-form-contacto]");
+  var avisoContacto = formContacto.querySelector("[data-form-msg]");
+  var CAMPOS_CONTACTO = ["telefono", "whatsapp", "mensaje", "horario", "respuesta", "email", "direccion", "localidad", "instagram", "facebook", "legajo"];
+
+  function llenarContacto() {
+    CAMPOS_CONTACTO.forEach(function (campo) { formContacto[campo].value = contacto[campo] || ""; });
+    say(avisoContacto, "");
+  }
+
+  function digitos(texto) {
+    return String(texto || "").replace(/\D/g, "");
+  }
+
+  function validarContacto(c) {
+    if (digitos(c.telefono).length < 8) return "Revisá el teléfono: tiene que tener la característica.";
+    var wa = digitos(c.whatsapp);
+    if (wa.length < 11 || wa.length > 15) return "Revisá el WhatsApp: va con código de país, por ejemplo +54 9 341 555-1234.";
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c.email)) return "Revisá el email.";
+    if (c.direccion.length < 4) return "Escribí la dirección.";
+    if (c.localidad.length < 2) return "Escribí la localidad.";
+    if (c.horario.length < 4) return "Escribí el horario de atención.";
+    if (c.instagram && !/^https:\/\/(www\.)?instagram\.com\//.test(c.instagram)) return "El Instagram tiene que ser un link que empiece con https://www.instagram.com/";
+    if (c.facebook && !/^https:\/\/(www\.)?facebook\.com\//.test(c.facebook)) return "El Facebook tiene que ser un link que empiece con https://facebook.com/";
+    return "";
+  }
+
+  formContacto.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var nuevo = {};
+    CAMPOS_CONTACTO.forEach(function (campo) { nuevo[campo] = formContacto[campo].value.replace(/\s+/g, " ").trim(); });
+    var error = soloLectura ? SIN_PERMISO : validarContacto(nuevo);
+    if (error) { say(avisoContacto, error, "warn"); return; }
+    var boton = formContacto.querySelector("button[type=submit]");
+    var antes = contacto;
+    boton.disabled = true;
+    say(avisoContacto, "Guardando…");
+    contacto = nuevo;
+    guardarEn(CONTACTO, function (data) {
+      CAMPOS_CONTACTO.forEach(function (campo) { data[campo] = nuevo[campo]; });
+    }, "datos de contacto").then(function (r) {
+      contacto = r.data;
+      say(avisoContacto, "");
+      say(avisoApp, "Datos de contacto guardados. El sitio se actualiza en uno o dos minutos.", "ok");
+    }).catch(function (err) {
+      contacto = antes;
+      say(avisoContacto, err.message, "warn");
+    }).then(function () {
+      boton.disabled = false;
+    });
+  });
+
+  formContacto.querySelector("[data-deshacer]").addEventListener("click", llenarContacto);
+
   /* Pestañas */
 
   function mostrarPestaña(nombre) {
@@ -1116,13 +1178,13 @@
     document.querySelectorAll("[data-panel]").forEach(function (panel) {
       panel.hidden = panel.getAttribute("data-panel") !== nombre;
     });
-    if (history.replaceState) history.replaceState(null, "", nombre === "ofertas" ? location.pathname : "#portada");
+    if (history.replaceState) history.replaceState(null, "", nombre === "ofertas" ? location.pathname : "#" + nombre);
   }
 
   document.querySelectorAll("[data-tab]").forEach(function (tab) {
     tab.addEventListener("click", function () { mostrarPestaña(tab.getAttribute("data-tab")); });
   });
-  if (location.hash === "#portada") mostrarPestaña("portada");
+  if (location.hash === "#portada" || location.hash === "#contacto") mostrarPestaña(location.hash.slice(1));
 
   modo(!!token);
 })();

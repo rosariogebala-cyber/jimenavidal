@@ -919,7 +919,7 @@ def note_band(html):
     return (
         '<div class="foot-cta jv-cierre"><div class="container">'
         '<div><h2>%s</h2>'
-        '<p>Contanos qué necesitás y te respondemos de lunes a viernes, de 9 a 18&nbsp;h.</p></div>'
+        '<p>Contanos qué necesitás y te respondemos {{c.respuesta}}.</p></div>'
         '<div class="jv-cierre-side">'
         '<p class="jv-cierre-hint">Escribinos por WhatsApp o dejanos tu&nbsp;email.</p>'
         '<a class="jv-wa" href="%s" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp"><i class="bi bi-whatsapp"></i></a>'

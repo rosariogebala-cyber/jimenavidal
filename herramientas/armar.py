@@ -19,7 +19,7 @@ import unicodedata
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from html import escape
-from urllib.parse import quote
+from urllib.parse import quote, quote_plus
 from urllib.request import urlopen
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
@@ -32,7 +32,6 @@ DATOS = os.path.join(REPO, "datos")
 FOTOS = os.path.join(DATOS, "fotos")
 SALIDA = os.path.join(REPO, "_site")
 BASE_URL = "https://rosariogebala-cyber.github.io/jimenavidal/"
-EMAIL = "info@jimenavidal.tur.ar"
 LARGO_MAXIMO = 320
 
 
@@ -250,6 +249,39 @@ def portada(html):
     return HERO_RE.sub(lambda m: m.group(1) + cuerpo + m.group(3), html, count=1)
 
 
+def solo_digitos(texto):
+    return re.sub(r"\D", "", texto or "")
+
+
+def datos_contacto():
+    """Valores de datos/contacto.json listos para la plantilla ({{c.nombre}} en landing.html)."""
+    c = leer_json("contacto.json")
+    tel = solo_digitos(c.get("telefono"))
+    direccion = " ".join((c.get("direccion") or "").split())
+    localidad = " ".join((c.get("localidad") or "").split())
+    return c, {
+        "telefono": escape(c.get("telefono") or ""),
+        "tel": ("+" if (c.get("telefono") or "").strip().startswith("+") else "") + tel,
+        "wa": solo_digitos(c.get("whatsapp")),
+        "wa_texto": quote(c.get("mensaje") or "Hola, quiero hacer una consulta"),
+        "horario": sin_viuda(c.get("horario")),
+        "respuesta": sin_viuda(c.get("respuesta")),
+        "email": escape(c.get("email") or ""),
+        "direccion": escape(direccion),
+        "localidad": sin_viuda(localidad),
+        "ciudad": escape(localidad.split(",")[0].strip()),
+        "calle": escape(direccion.split(",")[0].strip()),
+        "mapa": quote_plus("%s, %s" % (direccion.split(",")[0].strip(), localidad)),
+        "instagram": escape(c.get("instagram") or ""),
+        "facebook": escape(c.get("facebook") or ""),
+        "legajo": escape(c.get("legajo") or ""),
+    }
+
+
+def con_contacto(html, valores):
+    return re.sub(r"\{\{c\.(\w+)\}\}", lambda m: valores[m.group(1)], html)
+
+
 def cabecera(sitio):
     imagen = BASE_URL + sitio["imagen"].lstrip("/") if sitio.get("imagen") else ""
     tags = [
@@ -274,10 +306,10 @@ document.querySelectorAll("[data-mailto-form]").forEach(function (form) {
     e.preventDefault();
     var email = form.querySelector('input[type="email"]');
     var cuerpo = "Hola, quiero que me escriban a " + (email ? email.value : "") + ".";
-    location.href = "mailto:%s?subject=" + encodeURIComponent("Consulta desde la web") + "&body=" + encodeURIComponent(cuerpo);
+    location.href = "mailto:{{c.email}}?subject=" + encodeURIComponent("Consulta desde la web") + "&body=" + encodeURIComponent(cuerpo);
   });
 });
-</script>""" % EMAIL
+</script>"""
 
 
 def armar():
@@ -285,6 +317,10 @@ def armar():
     ofertas = leer_json("ofertas.json")
     with open(os.path.join(DATOS, "landing.html"), encoding="utf-8") as f:
         html = f.read()
+    contacto, valores = datos_contacto()
+    sitio["marca"].update(telefono=contacto.get("telefono", ""), instagram=contacto.get("instagram", ""),
+                          direccion=", ".join(p for p in (contacto.get("direccion"), contacto.get("localidad")) if p))
+    html = con_contacto(html, valores)
 
     if os.path.isdir(SALIDA):
         shutil.rmtree(SALIDA)
@@ -299,6 +335,10 @@ def armar():
     html = html.replace("</head>", cabecera(sitio) + "</head>", 1)
     html = html.replace("data-demo-form", "data-mailto-form")
     html = html.replace("</body>", '<script src="/assets/js/ofertas.js"></script>%s</body>' % MAILTO, 1)
+    html = con_contacto(html, valores)
+    html = re.sub(r'<a [^>]*href=""[^>]*>.*?</a>', "", html)
+    if "{{c." in html:
+        sys.exit("Quedó un dato de contacto sin completar en la landing.")
 
     def con_version(m):
         ruta = m.group(2).split("?", 1)[0].lstrip("/")

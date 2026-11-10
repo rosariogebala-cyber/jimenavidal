@@ -20,7 +20,7 @@
 <main class="jv-gestor">
   <p class="jg-kicker">Equipo</p>
   <h1>Gestión del&nbsp;sitio</h1>
-  <p class="jv-lead">Ofertas y portada. Cada cambio se publica en el sitio en uno o dos&nbsp;minutos.</p>
+  <p class="jv-lead">Ofertas, portada y contacto. Cada cambio se publica en el sitio en uno o dos&nbsp;minutos.</p>
 
   <form class="jv-clave-form" data-entrar hidden>
     <label>Clave de GitHub<input type="password" name="clave" autocomplete="off" spellcheck="false" required placeholder="github_pat_…"></label>
@@ -44,6 +44,7 @@
       <div class="jg-tabs" role="tablist" aria-label="Secciones">
         <button type="button" role="tab" id="tab-ofertas" aria-controls="panel-ofertas" aria-selected="true" data-tab="ofertas">Ofertas</button>
         <button type="button" role="tab" id="tab-portada" aria-controls="panel-portada" aria-selected="false" data-tab="portada">Portada</button>
+        <button type="button" role="tab" id="tab-contacto" aria-controls="panel-contacto" aria-selected="false" data-tab="contacto">Contacto</button>
       </div>
       <button type="button" data-recargar>Actualizar</button>
       <button type="button" data-salir>Salir</button>
@@ -191,6 +192,51 @@
           <div data-list-archivadas></div>
         </section>
       </div>
+    </div>
+
+    <div id="panel-contacto" role="tabpanel" aria-labelledby="tab-contacto" data-panel="contacto" hidden>
+      <form class="jv-form" data-form-contacto novalidate>
+        <h2>Datos de contacto</h2>
+        <p class="jv-hint">Se cambian en todo el sitio: barra de arriba, botones de WhatsApp, Dónde estamos, mapa y&nbsp;pie.</p>
+
+        <span class="jg-label">Teléfono y WhatsApp</span>
+        <div class="jv-row">
+          <label>Teléfono<input name="telefono" type="tel" maxlength="24" placeholder="+54 341 493-0560"></label>
+          <label>WhatsApp<input name="whatsapp" type="tel" maxlength="24" placeholder="+54 9 341 695-3818"></label>
+        </div>
+        <p class="jv-hint">El WhatsApp va con +54 y el 9 adelante. El teléfono se ve tal cual lo&nbsp;escribas.</p>
+        <label>Mensaje de WhatsApp<input name="mensaje" maxlength="120" placeholder="Hola, quiero consultar un pasaje al exterior"></label>
+        <p class="jv-hint">Es el texto que ya viene escrito al tocar Consultar o Escribinos. Las promos y la portada usan el&nbsp;suyo.</p>
+
+        <span class="jg-label">Horarios</span>
+        <label>Horario de atención<input name="horario" maxlength="40" placeholder="Lun a Vie, 9 a 12:30 h"></label>
+        <p class="jv-hint">Sale en la barra de arriba y en Dónde&nbsp;estamos.</p>
+        <label>Horario de respuesta<input name="respuesta" maxlength="60" placeholder="de lunes a viernes, de 9 a 18 h"></label>
+        <p class="jv-hint">Completa la frase de la banda naranja: "Contanos qué necesitás y te respondemos…". Empezá en&nbsp;minúscula.</p>
+
+        <span class="jg-label">Dónde estamos</span>
+        <div class="jv-row">
+          <label>Dirección<input name="direccion" maxlength="60" placeholder="Pellegrini 1798, Local 1"></label>
+          <label>Localidad<input name="localidad" maxlength="40" placeholder="Funes, Santa Fe"></label>
+        </div>
+        <p class="jv-hint">El mapa busca la calle y la localidad. Lo que va después de la primera coma (Local 1) solo se&nbsp;muestra.</p>
+
+        <span class="jg-label">Email y redes</span>
+        <label>Email<input name="email" type="email" maxlength="60" placeholder="info@jimenavidal.tur.ar"></label>
+        <div class="jv-row">
+          <label>Instagram<input name="instagram" type="url" inputmode="url" placeholder="https://www.instagram.com/jimenavidalviajes/"></label>
+          <label>Facebook<input name="facebook" type="url" inputmode="url" placeholder="https://facebook.com/…"></label>
+        </div>
+        <p class="jv-hint">Pegá el link completo del perfil. Si lo dejás vacío, el ícono no se&nbsp;muestra.</p>
+        <label>Legajo<input name="legajo" maxlength="40" placeholder="Legajo ARAV 16675"></label>
+        <p class="jv-hint">Sale en el pie, al lado del&nbsp;©.</p>
+
+        <div class="jv-actions">
+          <button class="jv-go" type="submit">Guardar</button>
+          <button type="button" data-deshacer>Deshacer cambios</button>
+        </div>
+        <p class="jv-msg" data-form-msg role="status"></p>
+      </form>
     </div>
   </div>
 </main>
