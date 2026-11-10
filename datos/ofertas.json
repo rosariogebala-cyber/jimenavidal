@@ -75,7 +75,7 @@
         "hotel"
       ],
       "regimen": "",
-      "destacada": false,
+      "destacada": true,
       "estrellas": 0,
       "precio_nota": "",
       "precio_antes": 0
