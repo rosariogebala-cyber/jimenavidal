@@ -87,6 +87,9 @@ video.jv-preview { background: #0b1f38; }
 .jg-bajar a span { font-weight: 500; opacity: .8; }
 .jg-bajar a:focus-visible { outline: 2px solid #0b1f38; outline-offset: 2px; }
 .jg-bajar-espera { color: #7a5644; }
+.jv-item .jg-fecha { display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 2px; padding: 3px 10px; border-radius: 999px; background: #e8f3ec; color: #1f5f34; font-weight: 600; }
+.jv-item .jg-fecha.is-prog { background: #fff1e6; color: #a43f07; }
+.jv-item .jg-fecha.is-fin { background: #f3e3d6; color: #7a5644; }
 .jv-acts { display: flex; flex-wrap: wrap; gap: 6px; }
 .jv-acts button, .jv-acts a { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; line-height: 1; }
 .jv-acts a { border-radius: 999px; background: #fff; color: #3d2616; box-shadow: inset 0 0 0 1px #f0d4c0; text-decoration: none; }

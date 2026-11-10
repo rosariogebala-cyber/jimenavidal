@@ -15,6 +15,7 @@ import re
 import shutil
 import sys
 import unicodedata
+from datetime import datetime, timedelta, timezone
 from html import escape
 from urllib.parse import quote
 
@@ -52,6 +53,15 @@ def huella(data):
     return hashlib.sha1(data).hexdigest()[:8]
 
 
+def hoy():
+    """Fecha de hoy en Argentina (UTC-3, sin horario de verano)."""
+    return datetime.now(timezone(timedelta(hours=-3))).date().isoformat()
+
+
+def vencida(item, dia):
+    return bool(item.get("hasta")) and item["hasta"] < dia
+
+
 def destacadas(publicadas):
     """Igual que /gestion: sin marcas guardadas, las cuatro primeras van arriba."""
     explicit = any("destacada" in item["datos"] for item in publicadas)
@@ -64,11 +74,12 @@ def destacadas(publicadas):
 def piezas_de(sitio, ofertas, html):
     """Arma card y PNG de cada promo. Devuelve las cards publicadas y el estado de cada una."""
     brand = piezas.brand_of(sitio["marca"])
-    publicadas = sorted((o for o in ofertas if o["estado"] == "publicada"), key=lambda o: o["orden"])
+    dia = hoy()
+    publicadas = sorted((o for o in ofertas if o["estado"] == "publicada" and not vencida(o, dia)), key=lambda o: o["orden"])
     flags = destacadas(publicadas)
     publicadas.sort(key=lambda o: (0 if flags[o["id"]] else 1, o["orden"]))
     ids_publicadas = [o["id"] for o in publicadas]
-    pendientes = [o for o in ofertas if o["estado"] != "publicada"]
+    pendientes = [o for o in ofertas if o["id"] not in ids_publicadas]
 
     cards, estado = [], {}
     for item in publicadas + pendientes:
@@ -108,6 +119,7 @@ def piezas_de(sitio, ofertas, html):
                 item["id"], src, alt, piezas.card_meta_html(offer), offer["destino"],
                 piezas.price_html(offer), piezas.includes_html(offer), detail, href,
                 featured=flags[item["id"]], filtros=piezas.filter_tags(offer),
+                desde=item.get("desde", ""), hasta=item.get("hasta", ""),
             ))
     return cards, estado
 

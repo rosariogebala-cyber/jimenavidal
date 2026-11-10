@@ -286,6 +286,25 @@
     return { map: map, n: n };
   }
 
+  function hoyAr() {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).format(new Date());
+  }
+
+  function diaCorto(iso) {
+    var p = String(iso || "").split("-");
+    return p.length === 3 ? Number(p[2]) + "/" + Number(p[1]) : "";
+  }
+
+  /* Cómo está la promo publicada según sus fechas: programada, vigente con fin o vencida. */
+  function periodo(o) {
+    if (o.estado !== "publicada" || (!o.desde && !o.hasta)) return "";
+    var hoy = hoyAr();
+    if (o.desde && hoy < o.desde) return '<p class="jg-fecha is-prog"><i class="bi bi-calendar-event" aria-hidden="true"></i> Programada: aparece el&nbsp;' + diaCorto(o.desde) + (o.hasta ? " y se saca después del&nbsp;" + diaCorto(o.hasta) : "") + "</p>";
+    if (o.hasta && hoy > o.hasta) return '<p class="jg-fecha is-fin"><i class="bi bi-calendar-x" aria-hidden="true"></i> Vencida el ' + diaCorto(o.hasta) + ": ya no se&nbsp;ve</p>";
+    if (o.hasta) return '<p class="jg-fecha"><i class="bi bi-calendar-check" aria-hidden="true"></i> Se ve hasta el&nbsp;' + diaCorto(o.hasta) + "</p>";
+    return "";
+  }
+
   function estadia(noches) {
     noches = Number(noches) || 0;
     if (!noches) return "";
@@ -337,6 +356,7 @@
       "<div><h3>" + esc(d.destino || "Sin destino") + "</h3>",
       "<p>" + esc(estadia(d.noches)) + "</p>",
       "<p>" + esc(precioTexto(d)) + "</p>",
+      periodo(o),
       pub.error ? '<p class="jg-aviso">No se puede armar: ' + esc(pub.error) + "</p>" : "",
       descargas(pub),
       "</div>",
@@ -471,6 +491,7 @@
     if (d.noches && (d.noches < 1 || d.noches > 21)) return "Las noches tienen que estar entre 1 y 21.";
     if (d.origen && d.origen.length < 2) return "Escribí desde dónde sale.";
     if (d.precio_antes && !d.precio) return "Cargá el precio de ahora. El anterior va tachado al lado.";
+    if (form.desde.value && form.hasta.value && form.hasta.value < form.desde.value) return "La fecha en que se saca tiene que ser igual o posterior a la fecha en que aparece.";
     return "";
   }
 
@@ -497,6 +518,8 @@
     form.precio_nota.value = d.precio_nota || "";
     form.hotel.value = d.hotel || "";
     form.estrellas.value = d.estrellas ? String(d.estrellas) : "";
+    form.desde.value = o && o.desde ? o.desde : "";
+    form.hasta.value = o && o.hasta ? o.hasta : "";
     var keys = o ? d.incluye || [] : ["aereo", "hotel"];
     Array.prototype.forEach.call(form.querySelectorAll('input[name="incluye"]'), function (el) {
       el.checked = keys.indexOf(el.value) !== -1;
@@ -545,6 +568,8 @@
     var id = editando || nuevoId();
     var esNueva = !editando;
     var foto = fotoNueva;
+    var desde = form.desde.value;
+    var hasta = form.hasta.value;
     var botones = form.querySelectorAll("button");
     Array.prototype.forEach.call(botones, function (b) { b.disabled = true; });
     say(avisoForm, "Guardando…");
@@ -561,12 +586,15 @@
       }
       if ("destacada" in (o.datos || {})) datos.destacada = o.datos.destacada;
       o.datos = datos;
+      if (desde) o.desde = desde; else delete o.desde;
+      if (hasta) o.hasta = hasta; else delete o.hasta;
       if (foto) o.foto = id + ".jpg";
       return { archivos: foto ? [{ path: "datos/fotos/" + id + ".jpg", base64: foto.base64 }] : [] };
     }, (esNueva ? "nueva oferta " : "edita ") + datos.destino).then(function () {
       if (foto) fotosLocales[id] = foto.vista;
       cerrar();
       var texto = accion === "guardar" ? "Cambios guardados." : estado === "publicada" ? "Quedó publicada." : "Quedó como pendiente.";
+      if (estado === "publicada" && desde && desde > hoyAr()) texto = "Quedó programada: aparece el " + diaCorto(desde) + ".";
       say(avisoApp, texto + " El sitio se actualiza en uno o dos minutos.", "ok");
     }).catch(function (err) {
       say(avisoForm, err.message, "warn");

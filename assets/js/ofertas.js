@@ -3,6 +3,14 @@
   var footer = document.querySelector("#footer");
   if (!footer || !footer.parentNode) return;
 
+  /* Las promos con fecha se ocultan fuera de su período, en hora de Argentina. */
+  var hoy = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).format(new Date());
+  document.querySelectorAll("#productos .prod-card[data-desde], #productos .prod-card[data-hasta]").forEach(function (card) {
+    var desde = card.getAttribute("data-desde") || "";
+    var hasta = card.getAttribute("data-hasta") || "";
+    if ((desde && hoy < desde) || (hasta && hoy > hasta)) card.parentNode.remove();
+  });
+
   var css = document.createElement("style");
   css.textContent = [
     "#productos .jv-stars{display:inline-flex;gap:2px;margin-left:.4em;color:#e4570a;vertical-align:middle}",
