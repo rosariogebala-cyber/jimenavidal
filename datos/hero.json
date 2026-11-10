@@ -72,6 +72,21 @@
       "boton": "Quiero viajar",
       "mensaje": "Hola, quiero consultar un pasaje al exterior",
       "estilo": "grande"
+    },
+    {
+      "id": "s67d1d0ea03",
+      "etiqueta": "",
+      "video": "",
+      "foto": "s67d1d0ea03.jpg",
+      "descripcion": "",
+      "lugar": "",
+      "titulo": "Hola!",
+      "destacado": "aca te lo explicamos",
+      "bajada": "",
+      "etiquetas": [],
+      "boton": "Quiero viajar",
+      "mensaje": "Hola, quiero consultar un pasaje al exterior",
+      "estilo": ""
     }
   ]
 }
