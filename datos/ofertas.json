@@ -112,18 +112,15 @@
   },
   {
     "id": "d238829146d94de8898e751977fbda20",
-    "estado": "pendiente",
-    "orden": 5,
+    "estado": "publicada",
+    "orden": 12,
     "foto": "d238829146d94de8898e751977fbda20.jpg",
     "datos": {
-      "hotel": "",
-      "vuelo": "con escala",
-      "fechas": "2 enero al 5 enero 2026",
-      "moneda": "USD",
+      "destino": "New York",
       "noches": 3,
       "origen": "Ezeiza",
-      "precio": 2300,
-      "destino": "New York",
+      "fechas": "2 enero al 5 enero 2026",
+      "vuelo": "con escala",
       "incluye": [
         "aereo",
         "excursion",
@@ -132,10 +129,13 @@
         "desayuno"
       ],
       "regimen": "Media pensión",
-      "destacada": false,
-      "estrellas": 0,
+      "moneda": "USD",
+      "precio_antes": 0,
+      "precio": 2300,
       "precio_nota": "Por pasajero adulto en base doble",
-      "precio_antes": 0
+      "hotel": "",
+      "estrellas": 0,
+      "destacada": false
     }
   },
   {
