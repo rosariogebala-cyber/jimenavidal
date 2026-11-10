@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Gestión de ofertas · Jimena Vidal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,620&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="gestion.css" rel="stylesheet">
+</head>
+<body>
+<header class="jg-head">
+  <a class="jg-marca" href="../">Jimena Vidal</a>
+  <a class="jg-ver" href="../" target="_blank" rel="noopener">Ver el sitio <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
+</header>
+
+<main class="jv-gestor">
+  <p class="jg-kicker">Equipo</p>
+  <h1>Gestión de&nbsp;ofertas</h1>
+  <p class="jv-lead">Publicadas, pendientes y el orden en que se ven. Cada cambio se publica en el sitio en uno o dos&nbsp;minutos.</p>
+
+  <form class="jv-clave-form" data-entrar hidden>
+    <label>Clave de GitHub<input type="password" name="clave" autocomplete="off" spellcheck="false" required placeholder="github_pat_…"></label>
+    <label class="jg-recordar"><input type="checkbox" name="recordar" checked> Recordar en este&nbsp;equipo</label>
+    <button class="jv-go" type="submit">Entrar</button>
+    <p class="jv-msg" data-clave-msg role="status"></p>
+    <details class="jg-ayuda">
+      <summary>Cómo sacar la&nbsp;clave</summary>
+      <ol>
+        <li>Entrá a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub · Fine-grained token</a> con la cuenta del&nbsp;sitio.</li>
+        <li>En <b>Repository access</b> elegí <b>Only select repositories</b> y marcá <b>jimenavidal</b>.</li>
+        <li>En <b>Permissions → Contents</b> elegí <b>Read and&nbsp;write</b>.</li>
+        <li>Generala, copiala y pegala&nbsp;acá.</li>
+      </ol>
+      <p>Esa clave solo sirve para este sitio. Si se pierde, se borra en GitHub y se saca&nbsp;otra.</p>
+    </details>
+  </form>
+
+  <div class="jv-app" hidden>
+    <div class="jv-top">
+      <button class="jv-nueva" type="button">Nueva oferta</button>
+      <button type="button" data-recargar>Actualizar</button>
+      <button type="button" data-salir>Salir</button>
+      <p class="jg-publicando" data-publicando role="status" hidden></p>
+    </div>
+    <p class="jv-msg" data-app-msg role="status"></p>
+
+    <form class="jv-form" hidden novalidate>
+      <h2 data-form-title>Nueva oferta</h2>
+      <label>Destino<input name="destino" maxlength="40" required placeholder="Riviera Maya"></label>
+      <label>Foto del destino<input type="file" name="foto" accept="image/jpeg,image/png,image/webp"></label>
+      <img class="jv-preview" alt="" hidden aria-hidden="true">
+      <p class="jv-hint">La foto se adapta al tamaño de la&nbsp;pieza.</p>
+      <div class="jv-row">
+        <label>Noches<input name="noches" type="number" min="1" max="21" value="7"></label>
+        <label>Sale de<input name="origen" maxlength="24" value="Rosario"></label>
+      </div>
+      <p class="jv-hint" data-stay>7 noches se publican como 8 días / 7&nbsp;noches.</p>
+      <label>Fechas<input name="fechas" maxlength="28" placeholder="12 jun – 19 jun, o salidas en junio"></label>
+      <p class="jv-hint">Sale en la pieza, bajo el&nbsp;origen.</p>
+      <span class="jg-label">Qué incluye</span>
+      <p class="jv-hint">Solo entra lo que tenga&nbsp;tilde.</p>
+      <div class="jv-checks">
+        <label><input type="checkbox" name="incluye" value="aereo"> Vuelo</label>
+        <label><input type="checkbox" name="incluye" value="equipaje"> Equipaje</label>
+        <label><input type="checkbox" name="incluye" value="traslado"> Traslados</label>
+        <label><input type="checkbox" name="incluye" value="excursion"> Visitas</label>
+        <label><input type="checkbox" name="incluye" value="guia"> Guía en español</label>
+        <label><input type="checkbox" name="incluye" value="hotel"> Alojamiento</label>
+        <label><input type="checkbox" name="incluye" value="desayuno"> Desayuno</label>
+        <label><input type="checkbox" name="incluye" value="asistencia"> Asistencia</label>
+      </div>
+      <div class="jv-row">
+        <label>Vuelo<select name="vuelo"><option value="">Sin aclarar</option><option value="directo">Directo</option><option value="con escala">Con escala</option></select></label>
+        <label>Comidas<select name="regimen"><option value="">Sin régimen</option><option>Desayuno</option><option>Media pensión</option><option>All inclusive</option></select></label>
+      </div>
+      <p class="jv-hint">En la pieza se lee Vuelo directo o Vuelo con&nbsp;escala.</p>
+      <label>Moneda<select name="moneda"><option>USD</option><option>ARS</option><option>EUR</option></select></label>
+      <div class="jv-row">
+        <label>Precio antes<input name="precio_antes" inputmode="numeric" maxlength="9" placeholder="2490"></label>
+        <label>Precio ahora<input name="precio" inputmode="numeric" maxlength="9" placeholder="1890"></label>
+      </div>
+      <p class="jv-hint">El anterior sale tachado. Si el de ahora queda vacío, la pieza no lo&nbsp;muestra.</p>
+      <label>Plan<select name="precio_nota">
+        <option value="">Sin plan</option>
+        <option>Por pasajero adulto en base doble</option>
+        <option>Por pasajero adulto en base triple</option>
+        <option>Plan familiar (2 adulto + 1 menor hasta 11 años)</option>
+        <option>Plan familiar (2 adulto + 2 menores hasta 11 años)</option>
+      </select></label>
+      <p class="jv-hint">Si no elegís plan, no entra en la&nbsp;pieza.</p>
+      <div class="jv-row">
+        <label>Hotel<input name="hotel" maxlength="32" placeholder="Nombre del hotel"></label>
+        <label>Estrellas<select name="estrellas"><option value="">Sin estrellas</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></label>
+      </div>
+      <p class="jv-hint">Salen bajo Alojamiento. Si el hotel queda vacío, no se&nbsp;muestra.</p>
+      <figure class="jg-pieza" hidden>
+        <img alt="">
+        <figcaption>Pieza publicada. Si cambiás algo, se rehace al&nbsp;guardar.</figcaption>
+      </figure>
+      <div class="jv-actions">
+        <button class="jv-go" type="submit" value="guardar" data-guardar hidden>Guardar</button>
+        <button class="jv-go" type="submit" value="publicada" data-publicar>Publicar</button>
+        <button type="submit" value="pendiente" data-pendiente>Guardar pendiente</button>
+        <button type="button" data-cerrar>Cerrar</button>
+      </div>
+      <p class="jv-msg" data-form-msg role="status"></p>
+    </form>
+
+    <div class="jv-cols">
+      <section class="jv-col" data-col="publicada">
+        <h2>Publicadas</h2>
+        <p class="jv-hint">Podés destacar hasta cuatro. Esas van arriba, sobre la foto&nbsp;principal.</p>
+        <div data-list></div>
+      </section>
+      <section class="jv-col" data-col="pendiente">
+        <h2>Pendientes</h2>
+        <p class="jv-hint">No se ven en el sitio hasta que las&nbsp;publiques.</p>
+        <div data-list></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script src="gestion.js"></script>
+</body>
+</html>

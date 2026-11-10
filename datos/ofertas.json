@@ -1,0 +1,169 @@
+[
+  {
+    "id": "37884926197f4aeb826073169ba6c356",
+    "estado": "publicada",
+    "orden": 1,
+    "foto": "37884926197f4aeb826073169ba6c356.jpg",
+    "datos": {
+      "hotel": "jjj",
+      "vuelo": "directo",
+      "fechas": "salidas en junio",
+      "moneda": "USD",
+      "noches": 7,
+      "origen": "Rosario",
+      "precio": 1899,
+      "destino": "Riviera Maya",
+      "incluye": [
+        "aereo",
+        "equipaje",
+        "traslado",
+        "excursion",
+        "hotel",
+        "desayuno",
+        "asistencia"
+      ],
+      "regimen": "All inclusive",
+      "destacada": true,
+      "estrellas": 4,
+      "precio_nota": "Plan familiar (2 adulto + 1 menor hasta 11 años)",
+      "precio_antes": 2100
+    }
+  },
+  {
+    "id": "b96059d325c141ed8a28bde0c8cb20a8",
+    "estado": "publicada",
+    "orden": 2,
+    "foto": "b96059d325c141ed8a28bde0c8cb20a8.jpg",
+    "datos": {
+      "hotel": "",
+      "vuelo": "",
+      "fechas": "",
+      "moneda": "USD",
+      "noches": 7,
+      "origen": "Rosario",
+      "precio": 0,
+      "destino": "mar del plata",
+      "incluye": [
+        "aereo",
+        "hotel"
+      ],
+      "regimen": "",
+      "destacada": false,
+      "estrellas": 0,
+      "precio_nota": "",
+      "precio_antes": 0
+    }
+  },
+  {
+    "id": "af91a5ec6b624a5aa73c036898214060",
+    "estado": "publicada",
+    "orden": 3,
+    "foto": "af91a5ec6b624a5aa73c036898214060.jpg",
+    "datos": {
+      "hotel": "",
+      "vuelo": "",
+      "fechas": "",
+      "moneda": "USD",
+      "noches": 7,
+      "origen": "Rosario",
+      "precio": 0,
+      "destino": "caba",
+      "incluye": [
+        "aereo",
+        "hotel"
+      ],
+      "regimen": "",
+      "destacada": true,
+      "estrellas": 0,
+      "precio_nota": "",
+      "precio_antes": 0
+    }
+  },
+  {
+    "id": "77dbd128a2034e059b8c4e5684f59d8d",
+    "estado": "publicada",
+    "orden": 4,
+    "foto": "77dbd128a2034e059b8c4e5684f59d8d.jpg",
+    "datos": {
+      "hotel": "Ciudad Autónoma de Buenos Aires",
+      "vuelo": "con escala",
+      "fechas": "12jun al 19diciembre",
+      "moneda": "USD",
+      "noches": 7,
+      "origen": "",
+      "precio": 1899,
+      "destino": "santa teresita",
+      "incluye": [
+        "aereo",
+        "equipaje",
+        "excursion",
+        "hotel",
+        "desayuno",
+        "asistencia"
+      ],
+      "regimen": "All inclusive",
+      "destacada": true,
+      "estrellas": 5,
+      "precio_nota": "Plan familiar (2 adulto + 1 menor hasta 11 años)",
+      "precio_antes": 2100
+    }
+  },
+  {
+    "id": "d238829146d94de8898e751977fbda20",
+    "estado": "publicada",
+    "orden": 5,
+    "foto": "d238829146d94de8898e751977fbda20.jpg",
+    "datos": {
+      "hotel": "",
+      "vuelo": "con escala",
+      "fechas": "2 enero al 5 enero 2026",
+      "moneda": "USD",
+      "noches": 3,
+      "origen": "Ezeiza",
+      "precio": 2300,
+      "destino": "New York",
+      "incluye": [
+        "aereo",
+        "excursion",
+        "guia",
+        "hotel",
+        "desayuno"
+      ],
+      "regimen": "Media pensión",
+      "destacada": false,
+      "estrellas": 0,
+      "precio_nota": "Por pasajero adulto en base doble",
+      "precio_antes": 0
+    }
+  },
+  {
+    "id": "a9b74a83d5e5470c9b0c50fd31ae1b5e",
+    "estado": "publicada",
+    "orden": 6,
+    "foto": "a9b74a83d5e5470c9b0c50fd31ae1b5e.jpg",
+    "datos": {
+      "hotel": "Ciudad Autónoma de Buenos Aires",
+      "vuelo": "con escala",
+      "fechas": "todos los dias a las 19hs",
+      "moneda": "USD",
+      "noches": 7,
+      "origen": "Aeroparque",
+      "precio": 3000,
+      "destino": "No tengo idea",
+      "incluye": [
+        "aereo",
+        "equipaje",
+        "traslado",
+        "excursion",
+        "hotel",
+        "desayuno",
+        "asistencia"
+      ],
+      "regimen": "Media pensión",
+      "destacada": true,
+      "estrellas": 5,
+      "precio_nota": "Plan familiar (2 adulto + 2 menores hasta 11 años)",
+      "precio_antes": 4000
+    }
+  }
+]
