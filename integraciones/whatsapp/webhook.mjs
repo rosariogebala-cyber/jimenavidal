@@ -67,7 +67,19 @@ function idOferta(env, from, token) {
 
 async function llamar(url, options) {
   const result = await fetch(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(12000) });
-  if (!result.ok) throw new Error('El servicio externo rechazó la solicitud');
+  if (!result.ok) {
+    let detail = {};
+    try { detail = await result.json(); } catch {}
+    const error = new Error('El servicio externo rechazó la solicitud');
+    error.diagnostico = {
+      servicio: new URL(url).hostname,
+      http: result.status,
+      codigo: typeof detail.error?.code === 'number' ? detail.error.code : undefined,
+      subcodigo: typeof detail.error?.error_subcode === 'number' ? detail.error.error_subcode : undefined,
+      trace: typeof detail.error?.fbtrace_id === 'string' ? detail.error.fbtrace_id.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100) : undefined,
+    };
+    throw error;
+  }
   return result;
 }
 
@@ -265,8 +277,8 @@ export function servidor(env) {
         }
       }
       return end(200);
-    } catch {
-      console.error('No se pudo procesar la notificación de WhatsApp');
+    } catch (error) {
+      console.error('No se pudo procesar la notificación de WhatsApp', JSON.stringify(error.diagnostico || { tipo: error.name }));
       return end(503);
     }
   });
