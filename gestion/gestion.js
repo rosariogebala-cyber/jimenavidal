@@ -7,6 +7,7 @@
   var CLAVE = "jv-gestion-clave";
   var MAX_DESTACADAS = 4;
   var LADO_FOTO = 1600;
+  var SIN_PERMISO = "Esta clave puede ver las ofertas pero no guardar. En GitHub, editá la clave y en Permissions → Contents elegí Read and write. Después tocá Salir y volvé a entrar.";
 
   var token = localStorage.getItem(CLAVE) || sessionStorage.getItem(CLAVE) || "";
   var ofertas = [];
@@ -17,6 +18,8 @@
   var editando = "";
   var estadoEditando = "";
   var fotoNueva = null;
+  var soloLectura = false;
+  var ocupado = false;
 
   var entrar = document.querySelector("[data-entrar]");
   var app = document.querySelector(".jv-app");
@@ -31,9 +34,23 @@
     });
   }
 
+  var ocultarAviso = null;
+
   function say(node, text, tone) {
     node.textContent = text || "";
-    node.className = "jv-msg" + (tone ? " is-" + tone : "");
+    node.className = (node === avisoApp ? "jg-toast " : "") + "jv-msg" + (tone ? " is-" + tone : "");
+    if (node !== avisoApp) return;
+    clearTimeout(ocultarAviso);
+    if (tone === "ok") ocultarAviso = setTimeout(function () { say(avisoApp, ""); }, 7000);
+  }
+
+  /* Un blob suelto no cambia el sitio; sirve para saber si la clave puede escribir. */
+  function puedeGuardar() {
+    return gh("/git/blobs", { method: "POST", body: { content: "", encoding: "utf-8" } })
+      .then(function () { return true; }, function (err) {
+        if (err.status === 403 || err.status === 404) return false;
+        throw err;
+      });
   }
 
   function gh(path, options) {
@@ -62,7 +79,7 @@
   function mensajeDe(status, data) {
     if (status === 401) return "La clave no es válida o venció. Cargala de nuevo.";
     if (status === 403 && /rate limit/i.test(data.message || "")) return "GitHub frenó los pedidos por un rato. Probá en unos minutos.";
-    if (status === 403 || status === 404) return "La clave no tiene permiso para guardar en jimenavidal (Contents: Read and write).";
+    if (status === 403 || status === 404) return SIN_PERMISO;
     if (status === 409 || status === 422) return "Otro cambio se guardó al mismo tiempo. Probá de nuevo.";
     return (data && data.message) || "GitHub no pudo completar el pedido.";
   }
@@ -283,7 +300,10 @@
     entrar.hidden = logueado;
     app.hidden = !logueado;
     if (!logueado) return Promise.resolve();
-    return cargar().catch(function (err) {
+    return cargar().then(puedeGuardar).then(function (ok) {
+      soloLectura = !ok;
+      if (soloLectura) say(avisoApp, SIN_PERMISO, "warn");
+    }).catch(function (err) {
       if (err.status === 401) { salir(); say(entrar.querySelector("[data-clave-msg]"), err.message, "warn"); return; }
       say(avisoApp, err.message, "warn");
     });
@@ -428,7 +448,7 @@
     var accion = (e.submitter && e.submitter.value) || (editando ? "guardar" : "pendiente");
     var estado = accion === "guardar" ? estadoEditando || "pendiente" : accion;
     var datos = datosDelForm();
-    var error = validar(datos);
+    var error = soloLectura ? SIN_PERMISO : validar(datos);
     if (error) { say(avisoForm, error, "warn"); return; }
     var id = editando || nuevoId();
     var esNueva = !editando;
@@ -557,6 +577,8 @@
     var act = button.getAttribute("data-act");
     var job;
     if (act === "edit") { abrir(ofertaPor(id)); return; }
+    if (soloLectura) { say(avisoApp, SIN_PERMISO, "warn"); return; }
+    if (ocupado) return;
     if (act === "featured") job = destacar(id, true);
     if (act === "unfeature") job = destacar(id, false);
     if (act === "up") job = mover(id, -1);
@@ -567,14 +589,17 @@
       job = quitar(id);
     }
     if (!job) return;
-    var botones = document.querySelectorAll(".jv-acts button");
-    Array.prototype.forEach.call(botones, function (b) { b.disabled = true; });
+    ocupado = true;
+    button.disabled = true;
+    button.classList.add("is-guardando");
     say(avisoApp, "Guardando…");
     job.then(function () {
       if (avisoApp.textContent === "Guardando…") say(avisoApp, "Guardado. El sitio se actualiza en uno o dos minutos.", "ok");
     }).catch(function (err) {
       say(avisoApp, err.message, "warn");
       render();
+    }).then(function () {
+      ocupado = false;
     });
   });
 
@@ -595,6 +620,9 @@
     token = clave;
     gh("").then(function (repo) {
       if (repo.permissions && repo.permissions.push === false) throw new Error("Esa cuenta no puede guardar en jimenavidal.");
+      return puedeGuardar();
+    }).then(function (ok) {
+      if (!ok) throw new Error(SIN_PERMISO.replace(" Después tocá Salir y volvé a entrar.", " Después pegala de nuevo acá."));
       (entrar.recordar.checked ? localStorage : sessionStorage).setItem(CLAVE, clave);
       entrar.clave.value = "";
       say(aviso, "");
