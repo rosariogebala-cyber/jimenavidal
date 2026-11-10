@@ -4,6 +4,7 @@
   var RAMA = "main";
   var API = "https://api.github.com/repos/" + REPO;
   var RAW = "https://raw.githubusercontent.com/" + REPO + "/";
+  var GRAPHQL = "https://api.github.com/graphql";
   var CLAVE = "jv-gestion-clave";
   var MAX_DESTACADAS = 4;
   var LADO_FOTO = 1600;
@@ -96,76 +97,138 @@
     return btoa(bin);
   }
 
-  function textoDeBase64(b64) {
-    var bin = atob(b64.replace(/\s/g, ""));
-    var bytes = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    return new TextDecoder().decode(bytes);
-  }
-
-  function leerRama() {
-    return gh("/git/ref/heads/" + RAMA).then(function (ref) {
-      return gh("/git/commits/" + ref.object.sha).then(function (commit) {
-        return { commit: ref.object.sha, arbol: commit.tree.sha };
+  function gql(query, variables) {
+    return fetch(GRAPHQL, {
+      method: "POST",
+      headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+      body: JSON.stringify({ query: query, variables: variables }),
+      cache: "no-store"
+    }).then(function (r) {
+      return r.text().then(function (text) {
+        var data = text ? JSON.parse(text) : {};
+        var err;
+        if (!r.ok) {
+          err = new Error(mensajeDe(r.status, data));
+          err.status = r.status;
+          throw err;
+        }
+        if (data.errors && data.errors.length) {
+          var e = data.errors[0];
+          var texto = e.message || "";
+          err = new Error(texto);
+          err.conflicto = /expected branch to point to|expectedHeadOid/i.test(texto);
+          err.borrado = /deletion/i.test(texto);
+          if (e.type === "FORBIDDEN" || e.type === "NOT_FOUND" || /not accessible|permission/i.test(texto)) err.message = SIN_PERMISO;
+          else if (err.conflicto) err.message = "Otro cambio se guardó al mismo tiempo. Probá de nuevo.";
+          else if (!texto) err.message = "GitHub no pudo completar el pedido.";
+          throw err;
+        }
+        return data.data;
       });
+    }, function () {
+      throw new Error("No hay conexión con GitHub. Probá de nuevo en unos segundos.");
     });
   }
 
-  function leerJson(ruta, commit) {
-    return gh("/contents/" + ruta + "?ref=" + commit).then(function (file) {
-      return JSON.parse(textoDeBase64(file.content));
+  var LEER = "query($duenio: String!, $nombre: String!, $rama: String!, $ofertas: String!, $portada: String!) {" +
+    " repository(owner: $duenio, name: $nombre) {" +
+    " ref(qualifiedName: $rama) { target { oid } }" +
+    " ofertas: object(expression: $ofertas) { ... on Blob { text } }" +
+    " portada: object(expression: $portada) { ... on Blob { text } } } }";
+
+  var GUARDAR = "mutation($input: CreateCommitOnBranchInput!) { createCommitOnBranch(input: $input) { commit { oid } } }";
+
+  /* Una sola consulta: el último commit de la rama y los dos archivos de datos. */
+  function leerTodo() {
+    return gql(LEER, {
+      duenio: REPO.split("/")[0],
+      nombre: REPO.split("/")[1],
+      rama: "refs/heads/" + RAMA,
+      ofertas: RAMA + ":" + OFERTAS,
+      portada: RAMA + ":" + PORTADA
+    }).then(function (data) {
+      var repo = data.repository;
+      if (!repo || !repo.ref) throw new Error(SIN_PERMISO);
+      return {
+        commit: repo.ref.target.oid,
+        ofertas: repo.ofertas ? JSON.parse(repo.ofertas.text) : [],
+        portada: repo.portada ? JSON.parse(repo.portada.text) : { slides: [] }
+      };
     });
+  }
+
+  /* El cambio se ve enseguida; si GitHub no lo acepta, la lista vuelve a como estaba. */
+  function alInstante(local, cambio) {
+    var copia = JSON.parse(JSON.stringify(local));
+    cambio(copia);
+    return copia;
   }
 
   function guardar(cambio, mensaje) {
+    var antes = ofertas;
+    try {
+      ofertas = alInstante(ofertas, cambio);
+      render();
+    } catch (err) {
+      ofertas = antes;
+      return Promise.reject(err);
+    }
     return guardarEn(OFERTAS, cambio, mensaje).then(function (r) {
       ofertas = r.data;
       render();
       return r.sha;
+    }, function (err) {
+      ofertas = antes;
+      render();
+      throw err;
     });
   }
 
   function guardarPortada(cambio, mensaje) {
+    var antes = portada;
+    try {
+      portada = alInstante(portada, cambio);
+      renderPortada();
+    } catch (err) {
+      portada = antes;
+      return Promise.reject(err);
+    }
     return guardarEn(PORTADA, cambio, mensaje).then(function (r) {
       portada = r.data;
       renderPortada();
       return r.sha;
+    }, function (err) {
+      portada = antes;
+      renderPortada();
+      throw err;
     });
   }
 
   /* Lee la última versión del archivo, aplica el cambio y lo guarda en un solo commit. */
-  function guardarEn(ruta, cambio, mensaje, intento) {
-    var rama, lista, extra;
-    return leerRama().then(function (r) {
-      rama = r;
-      return leerJson(ruta, rama.commit);
-    }).then(function (actual) {
-      lista = actual;
-      extra = cambio(lista) || {};
-      var archivos = extra.archivos || [];
-      return Promise.all(archivos.map(function (a) {
-        return gh("/git/blobs", { method: "POST", body: { content: a.base64, encoding: "base64" } }).then(function (blob) {
-          return { path: a.path, mode: "100644", type: "blob", sha: blob.sha };
-        });
-      }));
-    }).then(function (entradas) {
-      entradas.push({ path: ruta, mode: "100644", type: "blob", content: JSON.stringify(lista, null, 2) + "\n" });
-      (extra.borrar || []).forEach(function (path) {
-        entradas.push({ path: path, mode: "100644", type: "blob", sha: null });
+  function guardarEn(ruta, cambio, mensaje, intento, sinBorrar) {
+    var lista;
+    return leerTodo().then(function (actual) {
+      lista = ruta === OFERTAS ? actual.ofertas : actual.portada;
+      var extra = cambio(lista) || {};
+      var altas = (extra.archivos || []).map(function (a) { return { path: a.path, contents: a.base64 }; });
+      altas.push({ path: ruta, contents: base64DeTexto(JSON.stringify(lista, null, 2) + "\n") });
+      var bajas = sinBorrar ? [] : (extra.borrar || []).map(function (path) { return { path: path }; });
+      return gql(GUARDAR, {
+        input: {
+          branch: { repositoryNameWithOwner: REPO, branchName: RAMA },
+          expectedHeadOid: actual.commit,
+          message: { headline: "Gestión: " + mensaje },
+          fileChanges: { additions: altas, deletions: bajas }
+        }
       });
-      return gh("/git/trees", { method: "POST", body: { base_tree: rama.arbol, tree: entradas } });
-    }).then(function (arbol) {
-      return gh("/git/commits", { method: "POST", body: { message: "Gestión: " + mensaje, tree: arbol.sha, parents: [rama.commit] } });
-    }).then(function (commit) {
-      return gh("/git/refs/heads/" + RAMA, { method: "PATCH", body: { sha: commit.sha, force: false } }).then(function () {
-        return commit.sha;
-      });
-    }).then(function (sha) {
+    }).then(function (data) {
+      var sha = data.createCommitOnBranch.commit.oid;
       ultimoCommit = sha;
       vigilarPublicacion(sha);
       return { sha: sha, data: lista };
     }, function (err) {
-      if ((err.status === 409 || err.status === 422) && !intento) return guardarEn(ruta, cambio, mensaje, 1);
+      if (err.conflicto && !intento) return guardarEn(ruta, cambio, mensaje, 1, sinBorrar);
+      if (err.borrado && !sinBorrar) return guardarEn(ruta, cambio, mensaje, intento, true);
       throw err;
     });
   }
@@ -201,7 +264,7 @@
           marcarPublicando("Sigue publicándose. Tocá Actualizar en un rato.");
           return;
         }
-        vigilando = setTimeout(mirar, 6000);
+        vigilando = setTimeout(mirar, 3000);
       });
     })();
   }
@@ -309,20 +372,15 @@
 
   function cargar() {
     say(avisoApp, "Cargando…");
-    var leer = leerRama().then(function (r) {
-      return Promise.all([leerJson(OFERTAS, r.commit), leerJson(PORTADA, r.commit)]).then(function (datos) {
-        return { r: r, lista: datos[0], portada: datos[1] };
-      });
-    });
-    return Promise.all([leer, leerPublicado()])
+    return Promise.all([leerTodo(), leerPublicado()])
       .then(function (res) {
-        ofertas = res[0].lista;
+        ofertas = res[0].ofertas;
         portada = res[0].portada;
         render();
         renderPortada();
         say(avisoApp, "");
-        if (publicado.commit && publicado.commit !== res[0].r.commit) {
-          ultimoCommit = res[0].r.commit;
+        if (publicado.commit && publicado.commit !== res[0].commit) {
+          ultimoCommit = res[0].commit;
           vigilarPublicacion(ultimoCommit);
         }
       });
@@ -332,7 +390,8 @@
     entrar.hidden = logueado;
     app.hidden = !logueado;
     if (!logueado) return Promise.resolve();
-    return cargar().then(puedeGuardar).then(function (ok) {
+    return Promise.all([cargar(), puedeGuardar()]).then(function (res) {
+      var ok = res[1];
       soloLectura = !ok;
       if (soloLectura) say(avisoApp, SIN_PERMISO, "warn");
     }).catch(function (err) {
