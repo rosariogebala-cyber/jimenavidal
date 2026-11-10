@@ -28,6 +28,12 @@ jobs:
           cache: pip
           cache-dependency-path: herramientas/requirements.txt
       - run: pip install -r herramientas/requirements.txt
+      - uses: actions/cache@v4
+        with:
+          path: .cache/piezas
+          key: piezas-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            piezas-v1-
       - run: python herramientas/armar.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
