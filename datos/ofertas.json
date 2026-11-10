@@ -5,14 +5,11 @@
     "orden": 1,
     "foto": "37884926197f4aeb826073169ba6c356.jpg",
     "datos": {
-      "hotel": "jjj",
-      "vuelo": "directo",
-      "fechas": "salidas en junio",
-      "moneda": "USD",
+      "destino": "Riviera Maya",
       "noches": 7,
       "origen": "Rosario",
-      "precio": 1899,
-      "destino": "Riviera Maya",
+      "fechas": "salidas en junio",
+      "vuelo": "directo",
       "incluye": [
         "aereo",
         "equipaje",
@@ -23,11 +20,16 @@
         "asistencia"
       ],
       "regimen": "All inclusive",
-      "destacada": true,
-      "estrellas": 4,
+      "moneda": "USD",
+      "precio_antes": 2100,
+      "precio": 1899,
       "precio_nota": "Plan familiar (2 adulto + 1 menor hasta 11 años)",
-      "precio_antes": 2100
-    }
+      "hotel": "jjj",
+      "estrellas": 4,
+      "destacada": true
+    },
+    "desde": "2026-11-10",
+    "hasta": "2026-11-11"
   },
   {
     "id": "b96059d325c141ed8a28bde0c8cb20a8",
