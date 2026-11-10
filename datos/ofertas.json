@@ -160,7 +160,7 @@
         "asistencia"
       ],
       "regimen": "Media pensión",
-      "destacada": true,
+      "destacada": false,
       "estrellas": 5,
       "precio_nota": "Plan familiar (2 adulto + 2 menores hasta 11 años)",
       "precio_antes": 4000
@@ -187,7 +187,8 @@
       "precio": 400,
       "precio_nota": "Por pasajero adulto en base doble",
       "hotel": "",
-      "estrellas": 0
+      "estrellas": 0,
+      "destacada": false
     }
   }
 ]
