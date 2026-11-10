@@ -235,6 +235,7 @@ export function servidor(env) {
   return createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
     const end = (status, message = '') => { res.writeHead(status, { 'Content-Type': 'text/plain; charset=utf-8' }); res.end(message); };
+    if (url.pathname === '/healthz' && req.method === 'GET') return end(200, 'ok');
     if (url.pathname !== '/webhook') return end(404);
     if (req.method === 'GET') {
       const clave = Buffer.from(url.searchParams.get('hub.verify_token') || '');

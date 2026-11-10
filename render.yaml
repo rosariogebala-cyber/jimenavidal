@@ -1,0 +1,26 @@
+services:
+  - type: web
+    runtime: node
+    name: jimena-vidal-whatsapp-prueba
+    plan: free
+    branch: codex/whatsapp-promos-webhook
+    buildCommand: node --check integraciones/whatsapp/webhook.mjs
+    startCommand: node integraciones/whatsapp/webhook.mjs
+    healthCheckPath: /healthz
+    envVars:
+      - key: WA_MODE
+        value: prueba
+      - key: WA_APP_SECRET
+        sync: false
+      - key: WA_ACCESS_TOKEN
+        sync: false
+      - key: WA_VERIFY_TOKEN
+        sync: false
+      - key: WA_BUSINESS_ID
+        sync: false
+      - key: WA_PHONE_NUMBER_ID
+        sync: false
+      - key: WA_FLOW_ID
+        sync: false
+      - key: WA_ALLOWED_NUMBERS
+        sync: false

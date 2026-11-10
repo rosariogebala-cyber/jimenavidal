@@ -2,6 +2,10 @@
 
 El servicio recibe `Nueva promo` de los números autorizados, envía el formulario y procesa la respuesta. Para alojarlo, ejecutá `node integraciones/whatsapp/webhook.mjs` con Node.js 22 o superior y una URL pública HTTPS que dirija `/webhook` al puerto del servicio.
 
+## Alojamiento en Render
+
+El archivo `render.yaml` crea un servicio de prueba desde la rama de integración. Cargá los valores solicitados en el formulario de Render. El servicio entrega una URL HTTPS. En Meta, usá esa URL con el sufijo `/webhook`. La ruta `/healthz` verifica que el proceso esté activo.
+
 ## Configuración
 
 - `WA_APP_SECRET`, `WA_ACCESS_TOKEN` y `WA_VERIFY_TOKEN` van en los secretos del alojamiento. En Meta, usá ese último valor para verificar la URL de callback y suscribí el campo `messages`.
