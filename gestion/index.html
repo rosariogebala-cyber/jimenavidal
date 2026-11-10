@@ -56,9 +56,10 @@
     <div class="jg-acciones"><button class="jv-nueva" type="button">Nueva oferta</button></div>
     <form class="jv-form" hidden novalidate>
       <h2 data-form-title>Nueva oferta</h2>
+      <div class="jg-editor">
+      <div>
       <label>Destino<input name="destino" maxlength="40" required placeholder="Riviera Maya"></label>
       <label>Foto del destino<input type="file" name="foto" accept="image/jpeg,image/png,image/webp"></label>
-      <img class="jv-preview" alt="" hidden aria-hidden="true">
       <p class="jv-hint">La foto se adapta al tamaño de la&nbsp;pieza.</p>
       <div class="jv-row">
         <label>Noches<input name="noches" type="number" min="1" max="21" value="7"></label>
@@ -70,14 +71,14 @@
       <span class="jg-label">Qué incluye</span>
       <p class="jv-hint">Solo entra lo que tenga&nbsp;tilde.</p>
       <div class="jv-checks">
-        <label><input type="checkbox" name="incluye" value="aereo"> Vuelo</label>
-        <label><input type="checkbox" name="incluye" value="equipaje"> Equipaje</label>
-        <label><input type="checkbox" name="incluye" value="traslado"> Traslados</label>
-        <label><input type="checkbox" name="incluye" value="excursion"> Visitas</label>
-        <label><input type="checkbox" name="incluye" value="guia"> Guía en español</label>
-        <label><input type="checkbox" name="incluye" value="hotel"> Alojamiento</label>
-        <label><input type="checkbox" name="incluye" value="desayuno"> Desayuno</label>
-        <label><input type="checkbox" name="incluye" value="asistencia"> Asistencia</label>
+        <label><input type="checkbox" name="incluye" value="aereo" data-icono="airplane"> Vuelo</label>
+        <label><input type="checkbox" name="incluye" value="equipaje" data-icono="suitcase-lg"> Equipaje</label>
+        <label><input type="checkbox" name="incluye" value="traslado" data-icono="bus-front"> Traslados</label>
+        <label><input type="checkbox" name="incluye" value="excursion" data-icono="geo-alt"> Visitas</label>
+        <label><input type="checkbox" name="incluye" value="guia" data-icono="person"> Guía en español</label>
+        <label><input type="checkbox" name="incluye" value="hotel" data-icono="building"> Alojamiento</label>
+        <label><input type="checkbox" name="incluye" value="desayuno" data-icono="cup-hot"> Desayuno</label>
+        <label><input type="checkbox" name="incluye" value="asistencia" data-icono="plus-lg"> Asistencia</label>
       </div>
       <div class="jv-row">
         <label>Vuelo<select name="vuelo"><option value="">Sin aclarar</option><option value="directo">Directo</option><option value="con escala">Con escala</option></select></label>
@@ -109,9 +110,27 @@
         <label>Se saca después del<input name="hasta" type="date"></label>
       </div>
       <p class="jv-hint">Vacías: se ve mientras esté publicada. Las fechas son en hora de Argentina y se aplican aunque no entres a la&nbsp;gestión.</p>
+      </div>
+      <aside class="jg-vista" aria-labelledby="jg-vista-titulo">
+        <h3 id="jg-vista-titulo">Vista previa de la web</h3>
+        <p class="jv-hint">Se actualiza a medida que editás. Las imágenes finales para la web, post y reel se generan al&nbsp;guardar.</p>
+        <article class="jg-vista-ficha" data-vista-oferta>
+          <div class="jg-vista-foto">
+            <img alt="" hidden>
+            <span><i class="bi bi-image" aria-hidden="true"></i> Foto del destino</span>
+          </div>
+          <h4 data-vista-destino></h4>
+          <p class="jg-vista-meta"><span data-vista-fechas></span> <span data-vista-estrellas></span></p>
+          <p class="jg-vista-precio" data-vista-precio hidden></p>
+          <p class="jg-vista-incluye" data-vista-incluye hidden></p>
+          <p class="jg-vista-detalle" data-vista-detalle hidden></p>
+          <span class="jg-vista-cta">Escribinos <i class="bi bi-whatsapp" aria-hidden="true"></i></span>
+        </article>
+      </aside>
+      </div>
       <figure class="jg-pieza" hidden>
         <img alt="">
-        <figcaption>Pieza publicada. Si cambiás algo, se rehace al&nbsp;guardar.</figcaption>
+        <figcaption>Última pieza generada. Los cambios de arriba todavía están en&nbsp;edición.</figcaption>
         <div data-bajar></div>
       </figure>
       <div class="jv-actions">

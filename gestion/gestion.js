@@ -25,12 +25,16 @@
   var editando = "";
   var estadoEditando = "";
   var fotoNueva = null;
+  var fotoOriginal = "";
+  var fotoEnProceso = false;
   var soloLectura = false;
   var ocupado = false;
 
   var entrar = document.querySelector("[data-entrar]");
   var app = document.querySelector(".jv-app");
   var form = document.querySelector("[data-panel=ofertas] .jv-form");
+  var vistaOferta = form.querySelector("[data-vista-oferta]");
+  var fotoVista = vistaOferta.querySelector("img");
   var formPortada = document.querySelector("[data-form-portada]");
   var avisoApp = document.querySelector("[data-app-msg]");
   var avisoForm = form.querySelector("[data-form-msg]");
@@ -562,11 +566,71 @@
     return "";
   }
 
+  function actualizarFotoVista() {
+    var src = fotoNueva ? fotoNueva.vista : fotoOriginal;
+    fotoVista.hidden = !src;
+    if (src) fotoVista.setAttribute("src", src);
+    else fotoVista.removeAttribute("src");
+  }
+
+  function hotelCoincideConOrigen(hotel, origen) {
+    function palabras(lugar) {
+      return new Set(lugar.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/[^a-z0-9]+/)
+        .filter(function (p) { return p.length > 2 && !/^(del|las|los|autonoma|autonomo|ciudad)$/.test(p); }));
+    }
+    var a = palabras(hotel);
+    var b = palabras(origen);
+    if (!a.size || !b.size) return false;
+    var menor = a.size <= b.size ? a : b;
+    var mayor = menor === a ? b : a;
+    return Array.from(menor).every(function (p) { return mayor.has(p); });
+  }
+
+  function actualizarVistaOferta() {
+    var d = datosDelForm();
+    vistaOferta.querySelector("[data-vista-destino]").textContent = d.destino || "Nombre del destino";
+    vistaOferta.querySelector("[data-vista-fechas]").textContent = [estadia(d.noches), d.fechas].filter(Boolean).join(" · ");
+    var estrellas = vistaOferta.querySelector("[data-vista-estrellas]");
+    estrellas.textContent = "★".repeat(d.estrellas);
+    if (d.estrellas) estrellas.setAttribute("aria-label", d.estrellas + " estrellas");
+    else estrellas.removeAttribute("aria-label");
+
+    var precio = vistaOferta.querySelector("[data-vista-precio]");
+    precio.textContent = d.precio ? precioTexto(d) : "";
+    precio.hidden = !d.precio;
+    if (d.precio && d.precio_antes && d.precio_antes !== d.precio) {
+      var anterior = document.createElement("s");
+      anterior.textContent = precioTexto({ precio: d.precio_antes, moneda: d.moneda });
+      precio.prepend(anterior, " ");
+    }
+
+    var incluye = vistaOferta.querySelector("[data-vista-incluye]");
+    incluye.textContent = "";
+    incluye.hidden = !d.incluye.length;
+    form.querySelectorAll('input[name="incluye"]:checked').forEach(function (input) {
+      var chip = document.createElement("span");
+      var icono = document.createElement("i");
+      icono.className = "bi bi-" + input.dataset.icono;
+      icono.setAttribute("aria-hidden", "true");
+      chip.append(icono, " " + input.closest("label").textContent.trim());
+      incluye.appendChild(chip);
+    });
+
+    var hotel = d.hotel && !hotelCoincideConOrigen(d.hotel, d.origen)
+      ? (/^hotel\b/i.test(d.hotel) ? d.hotel : "Hotel " + d.hotel)
+      : "";
+    var detalle = vistaOferta.querySelector("[data-vista-detalle]");
+    detalle.textContent = [d.regimen, d.origen && "Sale de " + d.origen, d.vuelo && "Vuelo " + d.vuelo, hotel, d.precio_nota]
+      .filter(Boolean).map(function (texto) { return texto.endsWith(".") ? texto : texto + "."; }).join(" ");
+    detalle.hidden = !detalle.textContent;
+  }
+
   function abrir(o) {
     var d = o ? o.datos || {} : {};
     editando = o ? o.id : "";
     estadoEditando = o ? o.estado : "";
     fotoNueva = null;
+    fotoEnProceso = false;
     form.hidden = false;
     form.querySelector("[data-form-title]").textContent = o ? "Editar oferta" : "Nueva oferta";
     form.querySelector("[data-guardar]").hidden = !o;
@@ -592,10 +656,9 @@
       el.checked = keys.indexOf(el.value) !== -1;
     });
     form.foto.value = "";
-    var preview = form.querySelector(".jv-preview");
-    var foto = o && o.foto ? (fotosLocales[o.id] || RAW + RAMA + "/datos/fotos/" + o.foto) : "";
-    preview.hidden = !foto;
-    if (foto) preview.src = foto; else preview.removeAttribute("src");
+    fotoOriginal = o && o.foto ? (fotosLocales[o.id] || RAW + RAMA + "/datos/fotos/" + o.foto) : "";
+    actualizarFotoVista();
+    actualizarVistaOferta();
     var pieza = form.querySelector(".jg-pieza");
     var pub = o ? publicado.ofertas[o.id] : null;
     pieza.hidden = !(pub && pub.card);
@@ -612,6 +675,8 @@
     editando = "";
     estadoEditando = "";
     fotoNueva = null;
+    fotoEnProceso = false;
+    form.foto.value = "";
   }
 
   function siguienteOrden(lista, estado, sinId) {
@@ -631,6 +696,7 @@
     var estado = accion === "guardar" ? estadoEditando || "pendiente" : accion;
     var datos = datosDelForm();
     var error = soloLectura ? SIN_PERMISO : validar(datos);
+    if (!error && fotoEnProceso) error = "Esperá a que termine de cargar la foto.";
     if (error) { say(avisoForm, error, "warn"); return; }
     var id = editando || nuevoId();
     var esNueva = !editando;
@@ -678,15 +744,19 @@
 
   form.foto.addEventListener("change", function () {
     var file = form.foto.files[0];
-    var preview = form.querySelector(".jv-preview");
     fotoNueva = null;
+    fotoEnProceso = !!file;
+    actualizarFotoVista();
     if (!file) return;
     prepararFoto(file).then(function (foto) {
+      if (form.foto.files[0] !== file) return;
       fotoNueva = foto;
-      preview.src = foto.vista;
-      preview.hidden = false;
+      fotoEnProceso = false;
+      actualizarFotoVista();
       say(avisoForm, "");
     }).catch(function (err) {
+      if (form.foto.files[0] !== file) return;
+      fotoEnProceso = false;
       form.foto.value = "";
       say(avisoForm, err.message, "warn");
     });
@@ -696,6 +766,7 @@
     input.addEventListener("input", function () { input.value = input.value.replace(/\D/g, "").slice(0, 9); });
   });
   form.noches.addEventListener("input", textoNoches);
+  form.addEventListener("input", actualizarVistaOferta);
   form.querySelector("[data-cerrar]").addEventListener("click", cerrar);
 
   /* Acciones de la lista */

@@ -111,6 +111,25 @@ video.jv-preview { background: #0b1f38; }
 .jv-checks label { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 600; }
 .jv-form input[type=file] { padding: 8px; }
 .jv-preview { display: block; width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin: 0 0 10px; }
+.jg-editor { display: grid; gap: 18px; }
+.jg-vista { align-self: start; min-width: 0; background: #fffaf6; border: 1px solid #f0d4c0; border-radius: 16px; padding: 14px; margin-bottom: 14px; }
+.jg-vista h3 { margin: 0 0 8px; font-size: 16px; }
+.jg-vista-ficha { max-width: 320px; margin: 0 auto; padding: 10px; background: #fff; border-radius: 14px; overflow-wrap: anywhere; }
+.jg-vista-foto { aspect-ratio: 1; display: grid; place-items: center; overflow: hidden; border-radius: 12px; background: #f3e3d6; color: #7a5644; font-size: 13px; }
+.jg-vista-foto img { width: 100%; height: 100%; object-fit: cover; }
+.jg-vista-foto img:not([hidden]) + span { display: none; }
+.jg-vista-ficha h4 { margin: 10px 0 2px; font: 560 1.15rem Fraunces, Georgia, serif; }
+.jg-vista-ficha p { margin: 4px 0 6px; font-size: 13px; }
+.jg-vista-meta, .jg-vista-detalle { color: #7a5644; }
+.jg-vista-meta [data-vista-estrellas] { color: #a65a00; white-space: nowrap; }
+.jg-vista-ficha .jg-vista-precio { color: #a43f07; font-size: 1.05rem; font-weight: 700; }
+.jg-vista-precio s { color: #7a5644; font-size: .85rem; margin-right: 6px; }
+.jg-vista-incluye { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.jg-vista-cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 6px; padding-bottom: 3px; border-bottom: 1px solid; font-size: 14px; font-weight: 700; }
+@media (min-width: 860px) {
+  .jg-editor { grid-template-columns: minmax(0, 1fr) minmax(260px, 320px); }
+  .jg-vista { position: sticky; top: 16px; }
+}
 .jg-pieza { margin: 4px 0 14px; }
 .jg-pieza img { display: block; width: min(280px, 100%); height: auto; border-radius: 16px; }
 .jg-pieza figcaption { margin-top: 6px; font-size: 12px; color: #7a5644; }
