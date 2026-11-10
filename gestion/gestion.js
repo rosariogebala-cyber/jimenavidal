@@ -243,16 +243,25 @@
   }
 
   function leerPublicado() {
-    return fetch("estado.json?t=" + Date.now(), { cache: "no-store" })
+    return fetch("estado.json?t=" + Date.now(), { cache: "no-store", signal: AbortSignal.timeout(10000) })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (data) { if (data && data.ofertas) publicado = data; return publicado; })
       .catch(function () { return publicado; });
   }
 
-  function marcarPublicando(texto, listo) {
+  function marcarPublicando(texto, listo, detenido) {
     publicando.hidden = !texto;
     publicando.className = "jg-publicando" + (listo ? " is-ok" : "");
-    publicando.innerHTML = texto ? (listo ? '<i class="bi bi-check-circle-fill" aria-hidden="true"></i>' : '<span class="jg-giro" aria-hidden="true"></span>') + esc(texto) : "";
+    publicando.innerHTML = texto ? (listo ? '<i class="bi bi-check-circle-fill" aria-hidden="true"></i>' : detenido ? '' : '<span class="jg-giro" aria-hidden="true"></span>') + esc(texto) : "";
+  }
+
+  function estadoPublicacion(sha) {
+    // El repositorio es público: esta consulta no necesita permisos extra de la clave.
+    return fetch(API + "/actions/workflows/publicar.yml/runs?head_sha=" + encodeURIComponent(sha) + "&per_page=1", {
+      cache: "no-store", signal: AbortSignal.timeout(10000)
+    }).then(function (r) { return r.ok ? r.json() : {}; })
+      .then(function (data) { return (data.workflow_runs || [])[0] || null; })
+      .catch(function () { return null; });
   }
 
   function vigilarPublicacion(sha) {
@@ -261,7 +270,9 @@
     marcarPublicando("Publicando en el sitio…");
     (function mirar() {
       if (sha !== ultimoCommit) return;
-      leerPublicado().then(function (data) {
+      Promise.all([leerPublicado(), estadoPublicacion(sha)]).then(function (resultados) {
+        var data = resultados[0];
+        var ejecucion = resultados[1];
         if (sha !== ultimoCommit) return;
         if (data.commit === sha) {
           render();
@@ -269,8 +280,12 @@
           vigilando = setTimeout(function () { marcarPublicando(""); }, 8000);
           return;
         }
+        if (ejecucion && ejecucion.status === "completed" && ejecucion.conclusion !== "success") {
+          marcarPublicando("Cambios guardados. La publicación falló; el sitio conserva la versión anterior.", false, true);
+          return;
+        }
         if (Date.now() - inicio > 6 * 60 * 1000) {
-          marcarPublicando("Sigue publicándose. Tocá Actualizar en un rato.");
+          marcarPublicando("Cambios guardados. No pudimos confirmar la publicación. Tocá Actualizar para revisar.", false, true);
           return;
         }
         vigilando = setTimeout(mirar, 3000);
@@ -470,7 +485,9 @@
         renderPortada();
         llenarContacto();
         say(avisoApp, "");
-        if (publicado.commit && publicado.commit !== res[0].commit) {
+        clearTimeout(vigilando);
+        marcarPublicando("");
+        if (publicado.commit !== res[0].commit) {
           ultimoCommit = res[0].commit;
           vigilarPublicacion(ultimoCommit);
         }
