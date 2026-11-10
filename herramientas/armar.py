@@ -123,7 +123,6 @@ def piezas_de(sitio, ofertas, html):
     """Arma card, post y reel de cada promo. Devuelve las cards publicadas y el estado de cada una."""
     brand = piezas.brand_of(sitio["marca"])
     base = motor()
-    previos = publicado_antes()
     reusadas = 0
     telefono = (re.search(r"wa\.me/(\d+)", html) or [None, ""])[1]
     dia = hoy()
@@ -133,7 +132,25 @@ def piezas_de(sitio, ofertas, html):
     ids_publicadas = [o["id"] for o in publicadas]
     pendientes = [o for o in ofertas if o["id"] not in ids_publicadas]
     claves = {o["id"]: clave_de(o, brand, base) for o in ofertas}
-    iguales = [o["id"] for o in ofertas if (previos.get(o["id"]) or {}).get("clave") == claves[o["id"]]]
+    cache = os.path.join(REPO, ".cache", "piezas")
+    os.makedirs(cache, exist_ok=True)
+    locales = {}
+    for oid, clave in claves.items():
+        try:
+            with open(os.path.join(cache, clave + ".json"), encoding="utf-8") as f:
+                hashes = json.load(f)
+            imagenes = []
+            for tipo in ("card", "post", "reel"):
+                with open(os.path.join(cache, clave + "-" + tipo + ".jpg"), "rb") as f:
+                    data = f.read()
+                if huella(data) != hashes[tipo]:
+                    raise ValueError("Caché incompleta")
+                imagenes.append(data)
+            locales[oid] = imagenes
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+    previos = publicado_antes() if len(locales) < len(ofertas) else {}
+    iguales = [o["id"] for o in ofertas if o["id"] not in locales and (previos.get(o["id"]) or {}).get("clave") == claves[o["id"]]]
     with ThreadPoolExecutor(8) as pool:
         listas_previas = dict(zip(iguales, pool.map(lambda i: bajar_piezas(previos[i]), iguales)))
 
@@ -149,7 +166,7 @@ def piezas_de(sitio, ofertas, html):
             estado[item["id"]] = {"error": "Los textos quedan muy largos para la pieza."}
             continue
         clave = claves[item["id"]]
-        listas = listas_previas.get(item["id"])
+        listas = locales.get(item["id"]) or listas_previas.get(item["id"])
         if listas:
             card, post, reel = listas
             reusadas += 1
@@ -163,6 +180,12 @@ def piezas_de(sitio, ofertas, html):
             card = piezas.card_bytes(offer, brand, foto)
             post = piezas.post_bytes(offer, brand, foto)
             reel = piezas.reel_bytes(offer, brand, foto)
+        if item["id"] not in locales:
+            hashes = {}
+            for tipo, data in (("card", card), ("post", post), ("reel", reel)):
+                escribir(os.path.join(cache, clave + "-" + tipo + ".jpg"), data)
+                hashes[tipo] = huella(data)
+            escribir(os.path.join(cache, clave + ".json"), json.dumps(hashes).encode())
         escribir(os.path.join(SALIDA, "img", "ofertas", item["id"] + ".jpg"), card)
         escribir(os.path.join(SALIDA, "piezas", item["id"] + "-post.jpg"), post)
         escribir(os.path.join(SALIDA, "piezas", item["id"] + "-reel.jpg"), reel)
