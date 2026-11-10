@@ -117,7 +117,7 @@
   function syncHeroVideo() {
     if (!heroCarrusel) return;
     var quieto = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    heroCarrusel.querySelectorAll(".jv-hero-video").forEach(function (video) {
+    heroCarrusel.querySelectorAll("video.jv-hero-video").forEach(function (video) {
       var item = video.closest(".carousel-item");
       var activo = item && item.classList.contains("active") && !quieto;
       if (activo) {

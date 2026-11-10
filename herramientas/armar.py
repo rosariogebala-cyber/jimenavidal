@@ -16,6 +16,7 @@ import shutil
 import sys
 import unicodedata
 from html import escape
+from urllib.parse import quote
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, AQUI)
@@ -88,13 +89,18 @@ def piezas_de(sitio, ofertas, html):
                     foto = piezas.photo_from_bytes(f.read())
         card = piezas.card_bytes(offer, brand, foto)
         png = piezas.png_bytes(offer, brand, foto)
+        reel = piezas.reel_bytes(offer, brand, foto)
         escribir(os.path.join(SALIDA, "img", "ofertas", item["id"] + ".jpg"), card)
         escribir(os.path.join(SALIDA, "piezas", item["id"] + ".png"), png)
+        escribir(os.path.join(SALIDA, "piezas", item["id"] + "-reel.png"), reel)
         src = "img/ofertas/%s.jpg?v=%s" % (item["id"], huella(card))
+        nombre = "jimena-vidal-%s" % slug(offer["destino"])
         estado[item["id"]] = {
             "card": src,
             "png": "piezas/%s.png?v=%s" % (item["id"], huella(png)),
-            "archivo": "jimena-vidal-%s.png" % slug(offer["destino"]),
+            "archivo": nombre + "-post.png",
+            "reel": "piezas/%s-reel.png?v=%s" % (item["id"], huella(reel)),
+            "archivo_reel": nombre + "-reel.png",
         }
         if item["id"] in ids_publicadas:
             href = piezas.offer_href(html, offer["destino"], offer["estadia"], offer.get("fechas", ""), offer.get("precio", ""))
@@ -104,6 +110,65 @@ def piezas_de(sitio, ofertas, html):
                 featured=flags[item["id"]], filtros=piezas.filter_tags(offer),
             ))
     return cards, estado
+
+
+HERO_RE = re.compile(r'(<div id="heroJimena"[^>]*>)(.*?)(<button class="carousel-control-prev")', re.S)
+
+
+def sin_viuda(texto):
+    """Une las dos últimas palabras para que no quede una sola en la última línea."""
+    texto = escape(" ".join((texto or "").split()))
+    partes = texto.rsplit(" ", 1)
+    return "&nbsp;".join(partes) if len(partes) == 2 else texto
+
+
+def portada(html):
+    """Arma el carrusel del hero con datos/hero.json. Sin ese archivo deja el de la landing."""
+    ruta = os.path.join(DATOS, "hero.json")
+    if not os.path.exists(ruta):
+        return html
+    with open(ruta, encoding="utf-8") as f:
+        slides = [s for s in json.load(f).get("slides", []) if s.get("video") or s.get("foto")]
+    if not slides or not HERO_RE.search(html):
+        return html
+    telefono = (re.search(r"wa\.me/(\d+)", html) or [None, ""])[1]
+    puntos, items = [], []
+    for i, s in enumerate(slides):
+        activo = i == 0
+        etiqueta = escape(s.get("etiqueta") or s.get("lugar") or "Portada %d" % (i + 1))
+        puntos.append(
+            '<button type="button" data-bs-target="#heroJimena" data-bs-slide-to="%d" class="%s"%s aria-label="%s"></button>'
+            % (i, "active" if activo else "", ' aria-current="true"' if activo else "", etiqueta))
+        descripcion = escape(s.get("descripcion") or "")
+        if s.get("foto") and os.path.exists(os.path.join(DATOS, "hero", s["foto"])):
+            with open(os.path.join(DATOS, "hero", s["foto"]), "rb") as f:
+                data = f.read()
+            escribir(os.path.join(SALIDA, "img", "hero", s["foto"]), data)
+            medio = '<img class="jv-hero-video" src="img/hero/%s?v=%s" alt="%s">' % (s["foto"], huella(data), descripcion)
+        else:
+            medio = '<video class="jv-hero-video" muted playsinline loop preload="none" src="%s" aria-label="%s"></video>' % (
+                escape(s["video"]), descripcion)
+        lugar = '<p class="jv-hero-lugar" aria-hidden="true">%s</p>' % sin_viuda(s["lugar"]) if s.get("lugar") else ""
+        if s.get("destacado"):
+            titulo = '%s <span class="em">%s</span>' % (escape(s.get("titulo") or ""), sin_viuda(s["destacado"]))
+        else:
+            titulo = sin_viuda(s.get("titulo"))
+        bajada = '<p class="nx-lead">%s</p>' % sin_viuda(s["bajada"]) if s.get("bajada") else ""
+        pills = "".join(
+            '<span class="nx-pill"><i class="bi %s"></i> %s</span>' % (escape(p.get("icono") or "bi-check2-circle"), escape(p["texto"]))
+            for p in s.get("etiquetas") or [] if p.get("texto"))
+        boton = ""
+        if s.get("boton") and telefono:
+            href = "https://wa.me/%s?text=%s" % (telefono, quote(s.get("mensaje") or "Hola, quiero consultar un viaje"))
+            boton = '<a class="btn-nx mt-4" href="%s" target="_blank" rel="noopener">%s <i class="bi bi-whatsapp"></i></a>' % (
+                escape(href), escape(s["boton"]))
+        items.append(
+            '<div class="carousel-item%s%s"><div class="nx-hero-slide">%s%s<div class="container"><div class="col-lg-7">'
+            '<h2 class="nx-display">%s</h2>%s%s%s</div></div></div></div>' % (
+                " jv-quince" if s.get("estilo") == "grande" else "", " active" if activo else "",
+                medio, lugar, titulo, bajada, '<div class="nx-pills">%s</div>' % pills if pills else "", boton))
+    cuerpo = '<div class="carousel-indicators">%s</div><div class="carousel-inner">%s</div>' % ("".join(puntos), "".join(items))
+    return HERO_RE.sub(lambda m: m.group(1) + cuerpo + m.group(3), html, count=1)
 
 
 def cabecera(sitio):
@@ -156,6 +221,7 @@ def armar():
         shutil.rmtree(SALIDA)
     os.makedirs(SALIDA)
 
+    html = portada(html)
     cards, estado = piezas_de(sitio, ofertas, html)
     html = piezas.apply_offers(html, cards, piezas.PUBLIC_NOTE)
     if html is None:

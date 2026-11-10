@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Gestión de ofertas · Jimena Vidal</title>
+<title>Gestión del sitio · Jimena Vidal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,620&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,8 +19,8 @@
 
 <main class="jv-gestor">
   <p class="jg-kicker">Equipo</p>
-  <h1>Gestión de&nbsp;ofertas</h1>
-  <p class="jv-lead">Publicadas, pendientes y el orden en que se ven. Cada cambio se publica en el sitio en uno o dos&nbsp;minutos.</p>
+  <h1>Gestión del&nbsp;sitio</h1>
+  <p class="jv-lead">Ofertas y portada. Cada cambio se publica en el sitio en uno o dos&nbsp;minutos.</p>
 
   <form class="jv-clave-form" data-entrar hidden>
     <label>Clave de GitHub<input type="password" name="clave" autocomplete="off" spellcheck="false" required placeholder="github_pat_…"></label>
@@ -41,13 +41,18 @@
 
   <div class="jv-app" hidden>
     <div class="jv-top">
-      <button class="jv-nueva" type="button">Nueva oferta</button>
+      <div class="jg-tabs" role="tablist" aria-label="Secciones">
+        <button type="button" role="tab" id="tab-ofertas" aria-controls="panel-ofertas" aria-selected="true" data-tab="ofertas">Ofertas</button>
+        <button type="button" role="tab" id="tab-portada" aria-controls="panel-portada" aria-selected="false" data-tab="portada">Portada</button>
+      </div>
       <button type="button" data-recargar>Actualizar</button>
       <button type="button" data-salir>Salir</button>
       <p class="jg-publicando" data-publicando role="status" hidden></p>
     </div>
     <p class="jv-msg" data-app-msg role="status"></p>
 
+    <div id="panel-ofertas" role="tabpanel" aria-labelledby="tab-ofertas" data-panel="ofertas">
+    <div class="jg-acciones"><button class="jv-nueva" type="button">Nueva oferta</button></div>
     <form class="jv-form" hidden novalidate>
       <h2 data-form-title>Nueva oferta</h2>
       <label>Destino<input name="destino" maxlength="40" required placeholder="Riviera Maya"></label>
@@ -100,6 +105,7 @@
       <figure class="jg-pieza" hidden>
         <img alt="">
         <figcaption>Pieza publicada. Si cambiás algo, se rehace al&nbsp;guardar.</figcaption>
+        <div data-bajar></div>
       </figure>
       <div class="jv-actions">
         <button class="jv-go" type="submit" value="guardar" data-guardar hidden>Guardar</button>
@@ -120,6 +126,57 @@
         <h2>Pendientes<span class="jg-cuenta" data-cuenta></span></h2>
         <p class="jv-hint">No se ven en el sitio hasta que las&nbsp;publiques.</p>
         <div data-list></div>
+      </section>
+    </div>
+    </div>
+
+    <div id="panel-portada" role="tabpanel" aria-labelledby="tab-portada" data-panel="portada" hidden>
+      <div class="jg-acciones"><button class="jv-nueva" type="button" data-nueva-portada>Nueva diapositiva</button></div>
+
+      <form class="jv-form" data-form-portada hidden novalidate>
+        <h2 data-form-title>Nueva diapositiva</h2>
+        <div class="jv-row">
+          <label>Título<input name="titulo" maxlength="50" required placeholder="Si vas a Europa,"></label>
+          <label>Parte destacada<input name="destacado" maxlength="40" placeholder="te lo explicamos."></label>
+        </div>
+        <p class="jv-hint">La parte destacada sale en naranja, después del título. Puede quedar&nbsp;vacía.</p>
+        <label>Bajada<input name="bajada" maxlength="120" placeholder="Te contamos el ingreso, el equipaje y el check-in antes de salir."></label>
+        <label>Video<input name="video" type="url" inputmode="url" placeholder="https://videos.pexels.com/…mp4"></label>
+        <p class="jv-hint">Pegá el link del video (.mp4) de Pexels o Pixabay. Si cargás una foto, se usa la&nbsp;foto.</p>
+        <label>Foto<input type="file" name="foto" accept="image/jpeg,image/png,image/webp"></label>
+        <label class="jg-check" data-quitar-foto hidden><input type="checkbox" name="quitar_foto"> Quitar la foto y usar el&nbsp;video</label>
+        <img class="jv-preview" alt="" hidden aria-hidden="true">
+        <video class="jv-preview" muted playsinline preload="metadata" hidden aria-hidden="true"></video>
+        <div class="jv-row">
+          <label>Lugar<input name="lugar" maxlength="24" placeholder="Roma"></label>
+          <label>Qué se ve<input name="descripcion" maxlength="90" placeholder="Vista aérea del Coliseo al amanecer"></label>
+        </div>
+        <p class="jv-hint">El lugar sale grande, abajo a la derecha. "Qué se ve" no se muestra: lo leen los lectores de pantalla y&nbsp;Google.</p>
+        <span class="jg-label">Etiquetas</span>
+        <p class="jv-hint">Hasta tres, bajo la bajada. Las vacías no se&nbsp;muestran.</p>
+        <div class="jv-row jg-tres">
+          <input name="etiqueta1" maxlength="28" aria-label="Etiqueta 1" placeholder="Aéreo y hotel">
+          <input name="etiqueta2" maxlength="28" aria-label="Etiqueta 2" placeholder="Plan familiar">
+          <input name="etiqueta3" maxlength="28" aria-label="Etiqueta 3" placeholder="Check-in y equipaje">
+        </div>
+        <div class="jv-row">
+          <label>Texto del botón<input name="boton" maxlength="24" placeholder="Quiero viajar"></label>
+          <label>Nombre corto<input name="etiqueta" maxlength="20" placeholder="Europa"></label>
+        </div>
+        <p class="jv-hint">El botón abre WhatsApp. El nombre corto lo usan los puntitos del carrusel para lectores de&nbsp;pantalla.</p>
+        <label>Mensaje de WhatsApp<input name="mensaje" maxlength="120" placeholder="Hola, quiero consultar un pasaje al exterior"></label>
+        <label>Estilo<select name="estilo"><option value="">Normal</option><option value="grande">Título grande</option></select></label>
+        <div class="jv-actions">
+          <button class="jv-go" type="submit">Guardar</button>
+          <button type="button" data-cerrar>Cerrar</button>
+        </div>
+        <p class="jv-msg" data-form-msg role="status"></p>
+      </form>
+
+      <section class="jv-col">
+        <h2>Diapositivas<span class="jg-cuenta" data-cuenta></span></h2>
+        <p class="jv-hint">Se muestran en este orden. La primera es la que se ve al&nbsp;entrar.</p>
+        <div data-list-portada></div>
       </section>
     </div>
   </div>

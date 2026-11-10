@@ -1,4 +1,4 @@
-/* Gestión de ofertas de Jimena Vidal. Guarda en datos/ del repo y GitHub Actions vuelve a armar el sitio. */
+/* Gestión de ofertas y portada de Jimena Vidal. Guarda en datos/ del repo y GitHub Actions vuelve a armar el sitio. */
 (function () {
   var REPO = "rosariogebala-cyber/jimenavidal";
   var RAMA = "main";
@@ -7,10 +7,14 @@
   var CLAVE = "jv-gestion-clave";
   var MAX_DESTACADAS = 4;
   var LADO_FOTO = 1600;
-  var SIN_PERMISO = "Esta clave puede ver las ofertas pero no guardar. En GitHub, editá la clave y en Permissions → Contents elegí Read and write. Después tocá Salir y volvé a entrar.";
+  var LADO_PORTADA = 1920;
+  var OFERTAS = "datos/ofertas.json";
+  var PORTADA = "datos/hero.json";
+  var SIN_PERMISO = "Esta clave puede ver pero no guardar. En GitHub, editá la clave y en Permissions → Contents elegí Read and write. Después tocá Salir y volvé a entrar.";
 
   var token = localStorage.getItem(CLAVE) || sessionStorage.getItem(CLAVE) || "";
   var ofertas = [];
+  var portada = { slides: [] };
   var publicado = { commit: "", ofertas: {} };
   var ultimoCommit = "";
   var vigilando = null;
@@ -23,7 +27,8 @@
 
   var entrar = document.querySelector("[data-entrar]");
   var app = document.querySelector(".jv-app");
-  var form = document.querySelector(".jv-form");
+  var form = document.querySelector("[data-panel=ofertas] .jv-form");
+  var formPortada = document.querySelector("[data-form-portada]");
   var avisoApp = document.querySelector("[data-app-msg]");
   var avisoForm = form.querySelector("[data-form-msg]");
   var publicando = document.querySelector("[data-publicando]");
@@ -106,18 +111,34 @@
     });
   }
 
-  function leerOfertas(commit) {
-    return gh("/contents/datos/ofertas.json?ref=" + commit).then(function (file) {
+  function leerJson(ruta, commit) {
+    return gh("/contents/" + ruta + "?ref=" + commit).then(function (file) {
       return JSON.parse(textoDeBase64(file.content));
     });
   }
 
-  /* Lee la última versión, aplica el cambio y la guarda en un solo commit. */
-  function guardar(cambio, mensaje, intento) {
+  function guardar(cambio, mensaje) {
+    return guardarEn(OFERTAS, cambio, mensaje).then(function (r) {
+      ofertas = r.data;
+      render();
+      return r.sha;
+    });
+  }
+
+  function guardarPortada(cambio, mensaje) {
+    return guardarEn(PORTADA, cambio, mensaje).then(function (r) {
+      portada = r.data;
+      renderPortada();
+      return r.sha;
+    });
+  }
+
+  /* Lee la última versión del archivo, aplica el cambio y lo guarda en un solo commit. */
+  function guardarEn(ruta, cambio, mensaje, intento) {
     var rama, lista, extra;
     return leerRama().then(function (r) {
       rama = r;
-      return leerOfertas(rama.commit);
+      return leerJson(ruta, rama.commit);
     }).then(function (actual) {
       lista = actual;
       extra = cambio(lista) || {};
@@ -128,7 +149,7 @@
         });
       }));
     }).then(function (entradas) {
-      entradas.push({ path: "datos/ofertas.json", mode: "100644", type: "blob", content: JSON.stringify(lista, null, 2) + "\n" });
+      entradas.push({ path: ruta, mode: "100644", type: "blob", content: JSON.stringify(lista, null, 2) + "\n" });
       (extra.borrar || []).forEach(function (path) {
         entradas.push({ path: path, mode: "100644", type: "blob", sha: null });
       });
@@ -140,13 +161,11 @@
         return commit.sha;
       });
     }).then(function (sha) {
-      ofertas = lista;
       ultimoCommit = sha;
-      render();
       vigilarPublicacion(sha);
-      return sha;
+      return { sha: sha, data: lista };
     }, function (err) {
-      if ((err.status === 409 || err.status === 422) && !intento) return guardar(cambio, mensaje, 1);
+      if ((err.status === 409 || err.status === 422) && !intento) return guardarEn(ruta, cambio, mensaje, 1);
       throw err;
     });
   }
@@ -228,6 +247,15 @@
     return "";
   }
 
+  function descargas(pub) {
+    if (pub.error) return "";
+    if (!pub.reel) return '<p class="jg-bajar-espera">Las imágenes para bajar aparecen cuando termine de&nbsp;publicarse.</p>';
+    return '<p class="jg-bajar">' +
+      '<a href="../' + esc(pub.reel) + '" download="' + esc(pub.archivo_reel) + '"><i class="bi bi-download" aria-hidden="true"></i> Reel <span>1080×1920</span></a>' +
+      '<a href="../' + esc(pub.png) + '" download="' + esc(pub.archivo) + '"><i class="bi bi-download" aria-hidden="true"></i> Post <span>1080×1350</span></a>' +
+      "</p>";
+  }
+
   function fila(o, index, total, flags) {
     var d = o.datos || {};
     var pub = publicado.ofertas[o.id] || {};
@@ -237,9 +265,6 @@
         ? icono("unfeature", "Sacar destacado", "star-fill", ' class="is-on"')
         : icono("featured", "Destacar", "star", flags.n >= MAX_DESTACADAS ? " disabled" : "");
     }
-    var png = pub.png
-      ? '<a href="../' + esc(pub.png) + '" download="' + esc(pub.archivo || "oferta.png") + '" aria-label="Bajar PNG" title="Bajar PNG"><i class="bi bi-download" aria-hidden="true"></i></a>'
-      : '<a aria-disabled="true" aria-label="El PNG está listo cuando termine de publicarse" title="El PNG está listo cuando termine de publicarse"><i class="bi bi-download" aria-hidden="true"></i></a>';
     var src = miniatura(o);
     var art = document.createElement("article");
     art.className = "jv-item";
@@ -250,10 +275,10 @@
       "<p>" + esc(estadia(d.noches)) + "</p>",
       "<p>" + esc(precioTexto(d)) + "</p>",
       pub.error ? '<p class="jg-aviso">No se puede armar: ' + esc(pub.error) + "</p>" : "",
+      descargas(pub),
       "</div>",
       '<div class="jv-acts">',
       icono("edit", "Editar", "pencil"),
-      png,
       estrella,
       icono("up", "Subir", "arrow-up", index === 0 ? " disabled" : ""),
       icono("down", "Bajar", "arrow-down", index === total - 1 ? " disabled" : ""),
@@ -284,10 +309,17 @@
 
   function cargar() {
     say(avisoApp, "Cargando…");
-    return Promise.all([leerRama().then(function (r) { return leerOfertas(r.commit).then(function (lista) { return { r: r, lista: lista }; }); }), leerPublicado()])
+    var leer = leerRama().then(function (r) {
+      return Promise.all([leerJson(OFERTAS, r.commit), leerJson(PORTADA, r.commit)]).then(function (datos) {
+        return { r: r, lista: datos[0], portada: datos[1] };
+      });
+    });
+    return Promise.all([leer, leerPublicado()])
       .then(function (res) {
         ofertas = res[0].lista;
+        portada = res[0].portada;
         render();
+        renderPortada();
         say(avisoApp, "");
         if (publicado.commit && publicado.commit !== res[0].r.commit) {
           ultimoCommit = res[0].r.commit;
@@ -328,14 +360,14 @@
       : "";
   }
 
-  function prepararFoto(file) {
+  function prepararFoto(file, lado) {
     if (!file) return Promise.resolve(null);
     if (file.size > 15 * 1024 * 1024) return Promise.reject(new Error("La foto pesa más de 15 MB."));
     return new Promise(function (ok, fail) {
       var url = URL.createObjectURL(file);
       var img = new Image();
       img.onload = function () {
-        var k = Math.min(1, LADO_FOTO / Math.max(img.naturalWidth, img.naturalHeight));
+        var k = Math.min(1, (lado || LADO_FOTO) / Math.max(img.naturalWidth, img.naturalHeight));
         var canvas = document.createElement("canvas");
         canvas.width = Math.round(img.naturalWidth * k);
         canvas.height = Math.round(img.naturalHeight * k);
@@ -419,6 +451,7 @@
     var pub = o ? publicado.ofertas[o.id] : null;
     pieza.hidden = !(pub && pub.card);
     if (pub && pub.card) pieza.querySelector("img").src = "../" + pub.card;
+    pieza.querySelector("[data-bajar]").innerHTML = pub ? descargas(pub) : "";
     textoNoches();
     say(avisoForm, "");
     form.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -570,7 +603,7 @@
     return (ofertaPor(id).datos || {}).destino || "oferta";
   }
 
-  document.querySelector(".jv-cols").addEventListener("click", function (e) {
+  document.querySelector("[data-panel=ofertas] .jv-cols").addEventListener("click", function (e) {
     var button = e.target.closest("button[data-act]");
     if (!button || button.disabled) return;
     var id = button.closest(".jv-item").getAttribute("data-id");
@@ -603,7 +636,7 @@
     });
   });
 
-  document.querySelector(".jv-nueva").addEventListener("click", function () { abrir(null); });
+  document.querySelector("[data-panel=ofertas] .jv-nueva").addEventListener("click", function () { abrir(null); });
   document.querySelector("[data-salir]").addEventListener("click", salir);
   document.querySelector("[data-recargar]").addEventListener("click", function () {
     cargar().catch(function (err) { say(avisoApp, err.message, "warn"); });
@@ -634,6 +667,248 @@
       button.disabled = false;
     });
   });
+
+  /* Portada: carrusel del hero */
+
+  var editandoPortada = "";
+  var fotoPortada = null;
+  var avisoPortada = formPortada.querySelector("[data-form-msg]");
+
+  function sinViuda(texto) {
+    return esc(texto).replace(/\s+(\S+)\s*$/, "&nbsp;$1");
+  }
+
+  function slides() {
+    return (portada && portada.slides) || [];
+  }
+
+  function slidePor(id) {
+    return slides().filter(function (s) { return s.id === id; })[0];
+  }
+
+  function urlFotoPortada(s) {
+    return fotosLocales["portada-" + s.id] || RAW + RAMA + "/datos/hero/" + s.foto;
+  }
+
+  function filaPortada(s, index, total) {
+    var art = document.createElement("article");
+    art.className = "jv-item";
+    art.setAttribute("data-id", s.id);
+    var medio = s.foto
+      ? '<img src="' + esc(urlFotoPortada(s)) + '" alt="" loading="lazy">'
+      : s.video
+        ? '<video src="' + esc(s.video) + '#t=2" muted playsinline preload="metadata" aria-hidden="true"></video>'
+        : '<span class="jg-sin-foto" aria-hidden="true"><i class="bi bi-image"></i></span>';
+    art.innerHTML = [
+      medio,
+      "<div><h3>" + sinViuda([s.titulo, s.destacado].filter(Boolean).join(" ") || "Sin título") + "</h3>",
+      "<p>" + esc([s.lugar, s.foto ? "Foto" : s.video ? "Video" : ""].filter(Boolean).join(" · ")) + "</p>",
+      s.bajada ? "<p>" + sinViuda(s.bajada) + "</p>" : "",
+      "</div>",
+      '<div class="jv-acts">',
+      icono("edit", "Editar", "pencil"),
+      icono("up", "Subir", "arrow-up", index === 0 ? " disabled" : ""),
+      icono("down", "Bajar", "arrow-down", index === total - 1 ? " disabled" : ""),
+      icono("del", "Quitar", "trash", total <= 1 ? " disabled" : ""),
+      "</div>"
+    ].join("");
+    return art;
+  }
+
+  function renderPortada() {
+    var list = document.querySelector("[data-list-portada]");
+    var items = slides();
+    document.querySelector("[data-panel=portada] [data-cuenta]").textContent = items.length ? "(" + items.length + ")" : "";
+    list.innerHTML = "";
+    items.forEach(function (s, i) { list.appendChild(filaPortada(s, i, items.length)); });
+  }
+
+  function vistaMedio(s) {
+    var img = formPortada.querySelector("img.jv-preview");
+    var video = formPortada.querySelector("video.jv-preview");
+    var foto = fotoPortada ? fotoPortada.vista : s && s.foto && !formPortada.quitar_foto.checked ? urlFotoPortada(s) : "";
+    var link = formPortada.video.value.trim();
+    img.hidden = !foto;
+    if (foto) img.src = foto; else img.removeAttribute("src");
+    video.hidden = !!foto || !/^https:\/\//.test(link);
+    if (!video.hidden && video.getAttribute("src") !== link + "#t=2") video.src = link + "#t=2";
+  }
+
+  function abrirPortada(s) {
+    editandoPortada = s ? s.id : "";
+    fotoPortada = null;
+    formPortada.hidden = false;
+    formPortada.querySelector("[data-form-title]").textContent = s ? "Editar diapositiva" : "Nueva diapositiva";
+    ["titulo", "destacado", "bajada", "video", "lugar", "descripcion", "boton", "etiqueta", "mensaje", "estilo"].forEach(function (k) {
+      formPortada[k].value = s ? s[k] || "" : "";
+    });
+    if (!s) {
+      formPortada.boton.value = "Quiero viajar";
+      formPortada.mensaje.value = "Hola, quiero consultar un pasaje al exterior";
+    }
+    var tags = s && s.etiquetas ? s.etiquetas : [];
+    [1, 2, 3].forEach(function (n) { formPortada["etiqueta" + n].value = tags[n - 1] ? tags[n - 1].texto : ""; });
+    formPortada.foto.value = "";
+    formPortada.quitar_foto.checked = false;
+    formPortada.querySelector("[data-quitar-foto]").hidden = !(s && s.foto);
+    vistaMedio(s);
+    say(avisoPortada, "");
+    formPortada.scrollIntoView({ behavior: "smooth", block: "start" });
+    formPortada.titulo.focus({ preventScroll: true });
+  }
+
+  function cerrarPortada() {
+    formPortada.hidden = true;
+    editandoPortada = "";
+    fotoPortada = null;
+  }
+
+  formPortada.foto.addEventListener("change", function () {
+    var file = formPortada.foto.files[0];
+    fotoPortada = null;
+    if (!file) { vistaMedio(slidePor(editandoPortada)); return; }
+    prepararFoto(file, LADO_PORTADA).then(function (foto) {
+      fotoPortada = foto;
+      vistaMedio(slidePor(editandoPortada));
+      say(avisoPortada, "");
+    }).catch(function (err) {
+      formPortada.foto.value = "";
+      say(avisoPortada, err.message, "warn");
+    });
+  });
+  formPortada.video.addEventListener("change", function () { vistaMedio(slidePor(editandoPortada)); });
+  formPortada.quitar_foto.addEventListener("change", function () { vistaMedio(slidePor(editandoPortada)); });
+  formPortada.querySelector("[data-cerrar]").addEventListener("click", cerrarPortada);
+  document.querySelector("[data-nueva-portada]").addEventListener("click", function () { abrirPortada(null); });
+
+  formPortada.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var id = editandoPortada || "s" + nuevoId().slice(0, 10);
+    var anterior = slidePor(editandoPortada) || {};
+    var video = formPortada.video.value.trim();
+    var quitarFoto = formPortada.quitar_foto.checked;
+    var tieneFoto = !!fotoPortada || (!!anterior.foto && !quitarFoto);
+    var error = "";
+    if (soloLectura) error = SIN_PERMISO;
+    else if (formPortada.titulo.value.trim().length < 2) error = "Escribí el título.";
+    else if (video && !/^https:\/\/\S+$/.test(video)) error = "El video tiene que ser un link que empiece con https://";
+    else if (!video && !tieneFoto) error = "Pegá el link de un video o cargá una foto.";
+    if (error) { say(avisoPortada, error, "warn"); return; }
+
+    var iconos = (anterior.etiquetas || []).map(function (t) { return t.icono; });
+    var datos = {
+      id: id,
+      etiqueta: formPortada.etiqueta.value.trim(),
+      video: video,
+      foto: fotoPortada ? id + ".jpg" : quitarFoto ? "" : anterior.foto || "",
+      descripcion: formPortada.descripcion.value.trim(),
+      lugar: formPortada.lugar.value.trim(),
+      titulo: formPortada.titulo.value.trim(),
+      destacado: formPortada.destacado.value.trim(),
+      bajada: formPortada.bajada.value.trim(),
+      etiquetas: [1, 2, 3].map(function (n, i) {
+        return { icono: iconos[i] || "bi-check2-circle", texto: formPortada["etiqueta" + n].value.trim() };
+      }).filter(function (t) { return t.texto; }),
+      boton: formPortada.boton.value.trim(),
+      mensaje: formPortada.mensaje.value.trim(),
+      estilo: formPortada.estilo.value
+    };
+    var foto = fotoPortada;
+    var esNueva = !editandoPortada;
+    var botones = formPortada.querySelectorAll("button");
+    Array.prototype.forEach.call(botones, function (b) { b.disabled = true; });
+    say(avisoPortada, "Guardando…");
+    guardarPortada(function (data) {
+      data.slides = data.slides || [];
+      var i = data.slides.findIndex(function (s) { return s.id === id; });
+      var borrar = [];
+      if (i === -1) {
+        if (!esNueva) throw new Error("Esa diapositiva ya no existe. Tocá Actualizar.");
+        data.slides.push(datos);
+      } else {
+        if (data.slides[i].foto && !datos.foto) borrar.push("datos/hero/" + data.slides[i].foto);
+        data.slides[i] = datos;
+      }
+      return {
+        archivos: foto ? [{ path: "datos/hero/" + id + ".jpg", base64: foto.base64 }] : [],
+        borrar: borrar
+      };
+    }, (esNueva ? "nueva diapositiva " : "edita diapositiva ") + datos.titulo).then(function () {
+      if (foto) fotosLocales["portada-" + id] = foto.vista;
+      cerrarPortada();
+      say(avisoApp, "Portada guardada. El sitio se actualiza en uno o dos minutos.", "ok");
+    }).catch(function (err) {
+      say(avisoPortada, err.message, "warn");
+    }).then(function () {
+      Array.prototype.forEach.call(botones, function (b) { b.disabled = false; });
+    });
+  });
+
+  document.querySelector("[data-list-portada]").addEventListener("click", function (e) {
+    var button = e.target.closest("button[data-act]");
+    if (!button || button.disabled) return;
+    var id = button.closest(".jv-item").getAttribute("data-id");
+    var act = button.getAttribute("data-act");
+    var s = slidePor(id) || {};
+    var nombreSlide = [s.titulo, s.destacado].filter(Boolean).join(" ") || "diapositiva";
+    if (act === "edit") { abrirPortada(s); return; }
+    if (soloLectura) { say(avisoApp, SIN_PERMISO, "warn"); return; }
+    if (ocupado) return;
+    var job;
+    if (act === "up" || act === "down") {
+      var dir = act === "up" ? -1 : 1;
+      job = guardarPortada(function (data) {
+        var lista = data.slides || [];
+        var i = lista.findIndex(function (x) { return x.id === id; });
+        var j = i + dir;
+        if (i === -1 || j < 0 || j >= lista.length) return;
+        var tmp = lista[i];
+        lista[i] = lista[j];
+        lista[j] = tmp;
+      }, "ordena diapositiva " + nombreSlide);
+    }
+    if (act === "del") {
+      if (!window.confirm("¿Quitás la diapositiva \"" + nombreSlide + "\"?")) return;
+      job = guardarPortada(function (data) {
+        var lista = data.slides || [];
+        if (lista.length <= 1) throw new Error("La portada necesita al menos una diapositiva.");
+        var i = lista.findIndex(function (x) { return x.id === id; });
+        if (i === -1) return;
+        var quitada = lista.splice(i, 1)[0];
+        return { borrar: quitada.foto ? ["datos/hero/" + quitada.foto] : [] };
+      }, "quita diapositiva " + nombreSlide);
+    }
+    if (!job) return;
+    ocupado = true;
+    button.disabled = true;
+    button.classList.add("is-guardando");
+    say(avisoApp, "Guardando…");
+    job.then(function () {
+      say(avisoApp, "Guardado. El sitio se actualiza en uno o dos minutos.", "ok");
+    }).catch(function (err) {
+      say(avisoApp, err.message, "warn");
+      renderPortada();
+    }).then(function () {
+      ocupado = false;
+    });
+  });
+
+  /* Pestañas */
+
+  function mostrarPestaña(nombre) {
+    document.querySelectorAll("[data-tab]").forEach(function (tab) {
+      tab.setAttribute("aria-selected", String(tab.getAttribute("data-tab") === nombre));
+    });
+    document.querySelectorAll("[data-panel]").forEach(function (panel) {
+      panel.hidden = panel.getAttribute("data-panel") !== nombre;
+    });
+    if (history.replaceState) history.replaceState(null, "", nombre === "ofertas" ? location.pathname : "#portada");
+  }
+
+  document.querySelectorAll("[data-tab]").forEach(function (tab) {
+    tab.addEventListener("click", function () { mostrarPestaña(tab.getAttribute("data-tab")); });
+  });
+  if (location.hash === "#portada") mostrarPestaña("portada");
 
   modo(!!token);
 })();

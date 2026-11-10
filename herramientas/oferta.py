@@ -1,6 +1,6 @@
 """Pieza de oferta para Instagram y la tarjeta de la landing.
 
-Una sola imagen de 1080×1350. La foto se ve, con un degradé suave arriba
+Una imagen de 1080×1350 y otra de 1080×1920 para reels. La foto se ve, con un degradé suave arriba
 y un negro al 50% detrás de los íconos. Van juntos al pie, todos del
 mismo tamaño y con borde redondeado: el dibujo arriba y el texto debajo.
 El precio queda sobre la foto. La tarjeta cuadrada usa la misma pieza.
@@ -29,6 +29,8 @@ GRAY = (116, 122, 130)
 SAND = (232, 214, 196)
 MONEDAS = ("USD", "ARS", "EUR")
 STORY = (1080, 1350)
+REEL = (1080, 1920)
+REEL_SAFE = (250, 340)
 CARD = (1200, 1200)
 
 CARD_RE = re.compile(
@@ -829,6 +831,24 @@ def preview_bytes(offer, brand, photo=None):
 def png_bytes(offer, brand, photo=None):
     out = io.BytesIO()
     render(offer, brand, STORY, photo).save(out, "PNG", optimize=True)
+    return out.getvalue()
+
+
+def render_reel(offer, brand, photo=None):
+    """Foto a pantalla completa. La pieza va entre los márgenes que tapa Instagram."""
+    width, height = REEL
+    top, bottom = REEL_SAFE
+    image = canvas(REEL, photo)
+    zona = paint_portada(image.crop((0, top, width, height - bottom)), offer, brand)
+    image.paste(zona, (0, top))
+    if offer.get("flyer"):
+        image = _icon_shade(image, height - bottom)
+    return image
+
+
+def reel_bytes(offer, brand, photo=None):
+    out = io.BytesIO()
+    render_reel(offer, brand, photo).save(out, "PNG", optimize=True)
     return out.getvalue()
 
 
