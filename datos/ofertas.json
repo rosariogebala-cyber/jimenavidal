@@ -8,7 +8,7 @@
       "destino": "Riviera Maya",
       "noches": 7,
       "origen": "Rosario",
-      "fechas": "salidas en junio",
+      "fechas": "Fecha a confirmar",
       "vuelo": "directo",
       "incluye": [
         "aereo",
@@ -24,7 +24,7 @@
       "precio_antes": 2100,
       "precio": 1899,
       "precio_nota": "Plan familiar (2 adulto + 1 menor hasta 11 años)",
-      "hotel": "jjj",
+      "hotel": "",
       "estrellas": 4,
       "destacada": true
     },
@@ -33,7 +33,7 @@
   },
   {
     "id": "b96059d325c141ed8a28bde0c8cb20a8",
-    "estado": "publicada",
+    "estado": "pendiente",
     "orden": 2,
     "foto": "b96059d325c141ed8a28bde0c8cb20a8.jpg",
     "datos": {
@@ -44,7 +44,7 @@
       "noches": 7,
       "origen": "Rosario",
       "precio": 0,
-      "destino": "mar del plata",
+      "destino": "Mar del Plata",
       "incluye": [
         "aereo",
         "hotel"
@@ -58,7 +58,7 @@
   },
   {
     "id": "af91a5ec6b624a5aa73c036898214060",
-    "estado": "publicada",
+    "estado": "pendiente",
     "orden": 3,
     "foto": "af91a5ec6b624a5aa73c036898214060.jpg",
     "datos": {
@@ -69,13 +69,13 @@
       "noches": 7,
       "origen": "Rosario",
       "precio": 0,
-      "destino": "caba",
+      "destino": "Buenos Aires (CABA)",
       "incluye": [
         "aereo",
         "hotel"
       ],
       "regimen": "",
-      "destacada": true,
+      "destacada": false,
       "estrellas": 0,
       "precio_nota": "",
       "precio_antes": 0
@@ -83,11 +83,11 @@
   },
   {
     "id": "77dbd128a2034e059b8c4e5684f59d8d",
-    "estado": "publicada",
+    "estado": "pendiente",
     "orden": 4,
     "foto": "77dbd128a2034e059b8c4e5684f59d8d.jpg",
     "datos": {
-      "destino": "santa teresita",
+      "destino": "Santa Teresita",
       "noches": 7,
       "origen": "",
       "fechas": "12jun al 19diciembre",
@@ -107,12 +107,12 @@
       "precio_nota": "Plan familiar (2 adulto + 1 menor hasta 11 años)",
       "hotel": "Ciudad Autónoma de Buenos Aires",
       "estrellas": 5,
-      "destacada": true
+      "destacada": false
     }
   },
   {
     "id": "d238829146d94de8898e751977fbda20",
-    "estado": "publicada",
+    "estado": "pendiente",
     "orden": 5,
     "foto": "d238829146d94de8898e751977fbda20.jpg",
     "datos": {
@@ -140,7 +140,7 @@
   },
   {
     "id": "a9b74a83d5e5470c9b0c50fd31ae1b5e",
-    "estado": "publicada",
+    "estado": "pendiente",
     "orden": 6,
     "foto": "a9b74a83d5e5470c9b0c50fd31ae1b5e.jpg",
     "datos": {
@@ -174,10 +174,10 @@
     "orden": 7,
     "foto": "74cb0a1254044ea0ac27e5029b5f38d0.jpg",
     "datos": {
-      "destino": "Calafate",
+      "destino": "El Calafate",
       "noches": 7,
       "origen": "",
-      "fechas": "",
+      "fechas": "Fecha a confirmar",
       "vuelo": "directo",
       "incluye": [
         "aereo",
@@ -190,7 +190,7 @@
       "precio_nota": "Por pasajero adulto en base doble",
       "hotel": "",
       "estrellas": 0,
-      "destacada": true
+      "destacada": false
     }
   }
 ]

@@ -238,13 +238,16 @@ def portada(html):
         boton = ""
         if s.get("boton") and telefono:
             href = "https://wa.me/%s?text=%s" % (telefono, quote(s.get("mensaje") or "Hola, quiero consultar un viaje"))
-            boton = '<a class="btn-nx mt-4" href="%s" target="_blank" rel="noopener">%s <i class="bi bi-whatsapp"></i></a>' % (
+            boton = '<a class="btn-nx" href="%s" target="_blank" rel="noopener">%s <i class="bi bi-whatsapp" aria-hidden="true"></i></a>' % (
                 escape(href), escape(s["boton"]))
+        secundario = '<a class="btn-nx-outline" href="#productos">Ver promociones</a>' if activo else ""
+        acciones = '<div class="d-flex flex-wrap gap-2 mt-4">%s%s</div>' % (boton, secundario) if boton or secundario else ""
+        encabezado = "h1" if activo else "h2"
         items.append(
             '<div class="carousel-item%s%s"><div class="nx-hero-slide">%s%s<div class="container"><div class="col-lg-7">'
-            '<h2 class="nx-display">%s</h2>%s%s%s</div></div></div></div>' % (
+            '<%s class="nx-display">%s</%s>%s%s%s</div></div></div></div>' % (
                 " jv-quince" if s.get("estilo") == "grande" else "", " active" if activo else "",
-                medio, lugar, titulo, bajada, '<div class="nx-pills">%s</div>' % pills if pills else "", boton))
+                medio, lugar, encabezado, titulo, encabezado, bajada, '<div class="nx-pills">%s</div>' % pills if pills else "", acciones))
     cuerpo = '<div class="carousel-indicators">%s</div><div class="carousel-inner">%s</div>' % ("".join(puntos), "".join(items))
     return HERO_RE.sub(lambda m: m.group(1) + cuerpo + m.group(3), html, count=1)
 
