@@ -188,7 +188,7 @@
       "precio_nota": "Por pasajero adulto en base doble",
       "hotel": "",
       "estrellas": 0,
-      "destacada": false
+      "destacada": true
     }
   }
 ]
