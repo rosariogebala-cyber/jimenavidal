@@ -43,9 +43,10 @@ a { color: #c94a06; }
 .jv-msg.is-warn { color: #9a3412; }
 
 .jv-cols { display: grid; grid-template-columns: 1fr; gap: 18px; margin: 16px 0; }
-@media (min-width: 800px) { .jv-cols { grid-template-columns: 1fr 1fr; } }
 .jv-col { background: #fffaf6; border: 1px solid #f0d4c0; border-radius: 18px; padding: 16px 16px 8px; }
 .jv-col h2 { margin: 0 0 6px; font-size: 20px; }
+.jg-cuenta { margin-left: 6px; font-family: Manrope, system-ui, sans-serif; font-size: 15px; font-weight: 600; color: #7a5644; }
+.jv-col [data-list] { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); column-gap: 24px; }
 .jv-item { display: grid; grid-template-columns: 84px 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid #f0d4c0; }
 .jv-item > img, .jv-item .jg-sin-foto { width: 84px; height: 84px; object-fit: cover; border-radius: 12px; background: #f3e3d6; }
 .jv-item .jg-sin-foto { display: flex; align-items: center; justify-content: center; color: #b58c74; font-size: 26px; }

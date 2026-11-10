@@ -250,8 +250,10 @@
   function render() {
     var flags = marcas();
     ["publicada", "pendiente"].forEach(function (estado) {
-      var list = document.querySelector('[data-col="' + estado + '"] [data-list]');
+      var col = document.querySelector('[data-col="' + estado + '"]');
+      var list = col.querySelector("[data-list]");
       var items = de(estado);
+      col.querySelector("[data-cuenta]").textContent = items.length ? "(" + items.length + ")" : "";
       list.innerHTML = "";
       if (!items.length) {
         var vacio = document.createElement("p");

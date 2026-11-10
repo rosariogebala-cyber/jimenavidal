@@ -185,7 +185,15 @@ def armar():
     if sitio.get("imagen"):
         copiar(sitio["imagen"].lstrip("/"))
 
-    shutil.copytree(os.path.join(REPO, "gestion"), os.path.join(SALIDA, "gestion"))
+    gestion = os.path.join(SALIDA, "gestion")
+    shutil.copytree(os.path.join(REPO, "gestion"), gestion)
+    with open(os.path.join(gestion, "index.html"), encoding="utf-8") as f:
+        pagina = f.read()
+    for nombre in ("gestion.css", "gestion.js"):
+        with open(os.path.join(gestion, nombre), "rb") as f:
+            pagina = pagina.replace('"%s"' % nombre, '"%s?v=%s"' % (nombre, huella(f.read())))
+    with open(os.path.join(gestion, "index.html"), "w", encoding="utf-8") as f:
+        f.write(pagina)
     with open(os.path.join(SALIDA, "gestion", "estado.json"), "w", encoding="utf-8") as f:
         json.dump({"commit": os.environ.get("GITHUB_SHA", ""), "ofertas": estado}, f, ensure_ascii=False)
 
