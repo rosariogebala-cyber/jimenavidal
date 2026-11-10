@@ -336,8 +336,30 @@
       '<a href="../' + esc(pub.reel) + '" download="' + esc(pub.archivo_reel) + '"><i class="bi bi-download" aria-hidden="true"></i> Reel <span>1080×1920</span></a>' +
       '<a href="../' + esc(pub.post) + '" download="' + esc(pub.archivo_post) + '"><i class="bi bi-download" aria-hidden="true"></i> Post <span>1080×1350</span></a>' +
       '<a href="#" class="jg-wa" data-wa="' + esc(id) + '"><i class="bi bi-whatsapp" aria-hidden="true"></i> WhatsApp</a>' +
+      (pub.texto ? '<a href="#" class="jg-copiar" data-copiar="' + esc(id) + '"><i class="bi bi-clipboard" aria-hidden="true"></i> Copiar texto</a>' : "") +
       "</p>";
   }
+
+  function copiarTexto(id, link) {
+    var texto = (publicado.ofertas[id] || {}).texto || "";
+    var listo = function () {
+      link.innerHTML = '<i class="bi bi-clipboard-check" aria-hidden="true"></i> Copiado';
+      setTimeout(function () { link.innerHTML = '<i class="bi bi-clipboard" aria-hidden="true"></i> Copiar texto'; }, 2500);
+      say(avisoApp, "Texto copiado. Pegalo en el epígrafe de Instagram.", "ok");
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(texto).then(listo, function () { window.prompt("Copiá el texto:", texto); });
+    } else {
+      window.prompt("Copiá el texto:", texto);
+    }
+  }
+
+  document.addEventListener("click", function (e) {
+    var link = e.target.closest("[data-copiar]");
+    if (!link) return;
+    e.preventDefault();
+    copiarTexto(link.getAttribute("data-copiar"), link);
+  });
 
   function textoWhatsApp(o) {
     var d = o.datos || {};
@@ -399,6 +421,7 @@
       "</div>",
       '<div class="jv-acts">',
       icono("edit", "Editar", "pencil"),
+      icono("dup", "Duplicar", "copy"),
       estrella,
       icono("up", "Subir", "arrow-up", index === 0 ? " disabled" : ""),
       icono("down", "Bajar", "arrow-down", index === total - 1 ? " disabled" : ""),
@@ -625,8 +648,14 @@
       o.datos = datos;
       if (desde) o.desde = desde; else delete o.desde;
       if (hasta) o.hasta = hasta; else delete o.hasta;
-      if (foto) o.foto = id + ".jpg";
-      return { archivos: foto ? [{ path: "datos/fotos/" + id + ".jpg", base64: foto.base64 }] : [] };
+      if (!foto) return { archivos: [] };
+      var anterior = o.foto;
+      o.foto = id + "-" + Date.now().toString(36) + ".jpg";
+      var compartida = lista.some(function (x) { return x !== o && x.foto === anterior; });
+      return {
+        archivos: [{ path: "datos/fotos/" + o.foto, base64: foto.base64 }],
+        borrar: anterior && !compartida ? ["datos/fotos/" + anterior] : []
+      };
     }, (esNueva ? "nueva oferta " : "edita ") + datos.destino).then(function () {
       if (foto) fotosLocales[id] = foto.vista;
       cerrar();
@@ -713,9 +742,26 @@
       var i = lista.findIndex(function (x) { return x.id === id; });
       if (i === -1) return;
       var o = lista.splice(i, 1)[0];
-      return { borrar: o.foto ? ["datos/fotos/" + o.foto] : [] };
+      var compartida = lista.some(function (x) { return x.foto === o.foto; });
+      return { borrar: o.foto && !compartida ? ["datos/fotos/" + o.foto] : [] };
     }, "quita " + nombre(id)).then(function () {
       say(avisoApp, "Oferta quitada.", "ok");
+    });
+  }
+
+  /* La copia usa la misma foto y queda en pendientes, sin fechas ni destacado. */
+  function duplicar(id) {
+    var copia = nuevoId();
+    return guardar(function (lista) {
+      var o = lista.filter(function (x) { return x.id === id; })[0];
+      if (!o) throw new Error("Esa oferta ya no existe. Tocá Actualizar.");
+      var datos = JSON.parse(JSON.stringify(o.datos || {}));
+      delete datos.destacada;
+      lista.push({ id: copia, estado: "pendiente", orden: siguienteOrden(lista, "pendiente"), foto: o.foto || "", datos: datos });
+    }, "duplica " + nombre(id)).then(function () {
+      if (fotosLocales[id]) fotosLocales[copia] = fotosLocales[id];
+      abrir(ofertaPor(copia));
+      say(avisoApp, "Copia lista en pendientes. Cambiá lo que necesites y publicala.", "ok");
     });
   }
 
@@ -736,6 +782,7 @@
     if (act === "edit") { abrir(ofertaPor(id)); return; }
     if (soloLectura) { say(avisoApp, SIN_PERMISO, "warn"); return; }
     if (ocupado) return;
+    if (act === "dup") job = duplicar(id);
     if (act === "featured") job = destacar(id, true);
     if (act === "unfeature") job = destacar(id, false);
     if (act === "up") job = mover(id, -1);

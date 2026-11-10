@@ -1081,6 +1081,45 @@ def includes_html(offer):
     return '<p class="jv-incs">%s</p>' % "".join(chips)
 
 
+def hashtag(text):
+    words = unicodedata.normalize("NFKD", str(text or ""))
+    words = "".join(ch for ch in words if not unicodedata.combining(ch))
+    return "#" + "".join(w[:1].upper() + w[1:] for w in re.findall(r"[A-Za-z0-9]+", words))
+
+
+def caption(offer, brand, phone=""):
+    """Epígrafe para Instagram con los mismos datos que la pieza."""
+    title = offer["destino"].upper()
+    if offer.get("regimen"):
+        title += " · " + offer["regimen"]
+    lines = [title]
+    for part in (offer.get("estadia"), offer.get("salida")):
+        if part:
+            lines.append(part)
+    if offer.get("vuelo"):
+        lines.append("Vuelo " + offer["vuelo"])
+    if offer.get("incluye_frase"):
+        lines.append("Incluye " + offer["incluye_frase"] + ".")
+    if offer.get("hotel_linea"):
+        lines.append(offer["hotel_linea"])
+    if offer.get("precio"):
+        price = "Desde " + offer["precio"]
+        if offer.get("precio_antes_texto"):
+            price = "Antes %s. Ahora %s" % (offer["precio_antes_texto"], offer["precio"])
+        lines.append("")
+        lines.append(price)
+        if offer.get("precio_nota"):
+            lines.append(offer["precio_nota"])
+    lines.append("")
+    lines.append("Dejanos tu mensaje por WhatsApp: wa.me/" + phone if phone else "Dejanos tu mensaje.")
+    tags = [hashtag(brand["nombre"]), hashtag(offer["destino"])]
+    if offer.get("origen"):
+        tags.append(hashtag("desde " + offer["origen"]))
+    lines.append("")
+    lines.append(" ".join(tags))
+    return "\n".join(lines)
+
+
 def promo_copy(offer):
     meta = card_meta_text(offer)
     note = card_line(offer)

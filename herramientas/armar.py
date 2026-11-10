@@ -14,10 +14,13 @@ import os
 import re
 import shutil
 import sys
+import time
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from html import escape
 from urllib.parse import quote
+from urllib.request import urlopen
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, AQUI)
@@ -71,15 +74,69 @@ def destacadas(publicadas):
     }
 
 
+def motor():
+    """Huella del código y las fuentes que dibujan las piezas: si cambian, se vuelven a dibujar todas."""
+    h = hashlib.sha1()
+    fuentes = os.path.join(AQUI, "fonts")
+    for ruta in [os.path.join(AQUI, "oferta.py")] + sorted(os.path.join(fuentes, n) for n in os.listdir(fuentes)):
+        with open(ruta, "rb") as f:
+            h.update(f.read())
+    return h.hexdigest()
+
+
+def clave_de(item, brand, base):
+    """Cambia solo si cambia algo que se ve en las imágenes (destacar u ordenar no cuenta)."""
+    datos = {k: v for k, v in item["datos"].items() if k != "destacada"}
+    h = hashlib.sha1((base + json.dumps([datos, brand], sort_keys=True, default=str)).encode())
+    if item.get("foto"):
+        ruta = os.path.join(FOTOS, item["foto"])
+        if os.path.exists(ruta):
+            with open(ruta, "rb") as f:
+                h.update(f.read())
+    return h.hexdigest()[:16]
+
+
+def publicado_antes():
+    """estado.json del sitio en vivo, para reusar las imágenes que no cambiaron."""
+    try:
+        with urlopen(BASE_URL + "gestion/estado.json?t=%d" % time.time(), timeout=8) as r:
+            return json.load(r).get("ofertas", {})
+    except Exception:
+        return {}
+
+
+def bajar_piezas(previo):
+    """Las tres imágenes ya publicadas, verificadas contra su huella. None si falta alguna."""
+    def una(ruta):
+        camino, _, version = ruta.partition("?v=")
+        with urlopen(BASE_URL + camino, timeout=8) as r:
+            data = r.read()
+        if huella(data) != version:
+            raise ValueError(camino)
+        return data
+    try:
+        return [una(previo[k]) for k in ("card", "post", "reel")]
+    except Exception:
+        return None
+
+
 def piezas_de(sitio, ofertas, html):
-    """Arma card y PNG de cada promo. Devuelve las cards publicadas y el estado de cada una."""
+    """Arma card, post y reel de cada promo. Devuelve las cards publicadas y el estado de cada una."""
     brand = piezas.brand_of(sitio["marca"])
+    base = motor()
+    previos = publicado_antes()
+    reusadas = 0
+    telefono = (re.search(r"wa\.me/(\d+)", html) or [None, ""])[1]
     dia = hoy()
     publicadas = sorted((o for o in ofertas if o["estado"] == "publicada" and not vencida(o, dia)), key=lambda o: o["orden"])
     flags = destacadas(publicadas)
     publicadas.sort(key=lambda o: (0 if flags[o["id"]] else 1, o["orden"]))
     ids_publicadas = [o["id"] for o in publicadas]
     pendientes = [o for o in ofertas if o["id"] not in ids_publicadas]
+    claves = {o["id"]: clave_de(o, brand, base) for o in ofertas}
+    iguales = [o["id"] for o in ofertas if (previos.get(o["id"]) or {}).get("clave") == claves[o["id"]]]
+    with ThreadPoolExecutor(8) as pool:
+        listas_previas = dict(zip(iguales, pool.map(lambda i: bajar_piezas(previos[i]), iguales)))
 
     cards, estado = [], {}
     for item in publicadas + pendientes:
@@ -92,15 +149,21 @@ def piezas_de(sitio, ofertas, html):
         if len(detail) > LARGO_MAXIMO or len(meta) > LARGO_MAXIMO or len(offer["destino"]) > 48:
             estado[item["id"]] = {"error": "Los textos quedan muy largos para la pieza."}
             continue
-        foto = None
-        if item.get("foto"):
-            ruta_foto = os.path.join(FOTOS, item["foto"])
-            if os.path.exists(ruta_foto):
-                with open(ruta_foto, "rb") as f:
-                    foto = piezas.photo_from_bytes(f.read())
-        card = piezas.card_bytes(offer, brand, foto)
-        post = piezas.post_bytes(offer, brand, foto)
-        reel = piezas.reel_bytes(offer, brand, foto)
+        clave = claves[item["id"]]
+        listas = listas_previas.get(item["id"])
+        if listas:
+            card, post, reel = listas
+            reusadas += 1
+        else:
+            foto = None
+            if item.get("foto"):
+                ruta_foto = os.path.join(FOTOS, item["foto"])
+                if os.path.exists(ruta_foto):
+                    with open(ruta_foto, "rb") as f:
+                        foto = piezas.photo_from_bytes(f.read())
+            card = piezas.card_bytes(offer, brand, foto)
+            post = piezas.post_bytes(offer, brand, foto)
+            reel = piezas.reel_bytes(offer, brand, foto)
         escribir(os.path.join(SALIDA, "img", "ofertas", item["id"] + ".jpg"), card)
         escribir(os.path.join(SALIDA, "piezas", item["id"] + "-post.jpg"), post)
         escribir(os.path.join(SALIDA, "piezas", item["id"] + "-reel.jpg"), reel)
@@ -112,6 +175,8 @@ def piezas_de(sitio, ofertas, html):
             "archivo_post": nombre + "-post.jpg",
             "reel": "piezas/%s-reel.jpg?v=%s" % (item["id"], huella(reel)),
             "archivo_reel": nombre + "-reel.jpg",
+            "clave": clave,
+            "texto": piezas.caption(offer, brand, telefono),
         }
         if item["id"] in ids_publicadas:
             href = piezas.offer_href(html, offer["destino"], offer["estadia"], offer.get("fechas", ""), offer.get("precio", ""))
@@ -121,6 +186,8 @@ def piezas_de(sitio, ofertas, html):
                 featured=flags[item["id"]], filtros=piezas.filter_tags(offer),
                 desde=item.get("desde", ""), hasta=item.get("hasta", ""),
             ))
+    if reusadas:
+        print("Imágenes reusadas del sitio: %d de %d" % (reusadas, len(estado)))
     return cards, estado
 
 
