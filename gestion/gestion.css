@@ -131,6 +131,10 @@ video.jv-preview { background: #0b1f38; }
   .jg-vista { position: sticky; top: 16px; }
 }
 .jg-pieza { margin: 4px 0 14px; }
-.jg-pieza img { display: block; width: min(280px, 100%); height: auto; border-radius: 16px; }
+.jg-pieza summary { cursor: pointer; font-size: 14px; font-weight: 700; }
+.jg-pieza .jv-hint { margin: 6px 0 10px; }
+.jg-piezas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 12px; }
+.jg-piezas figure { margin: 0; }
+.jg-pieza img { display: block; width: min(200px, 100%); height: auto; border-radius: 12px; }
 .jg-pieza figcaption { margin-top: 6px; font-size: 12px; color: #7a5644; }
 .jv-actions { display: flex; flex-wrap: wrap; gap: 8px; }

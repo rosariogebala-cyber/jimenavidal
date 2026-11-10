@@ -662,7 +662,13 @@
     var pieza = form.querySelector(".jg-pieza");
     var pub = o ? publicado.ofertas[o.id] : null;
     pieza.hidden = !(pub && pub.card);
-    if (pub && pub.card) pieza.querySelector("img").src = "../" + pub.card;
+    pieza.open = false;
+    pieza.querySelectorAll("[data-pieza]").forEach(function (img) {
+      var ruta = pub && pub[img.dataset.pieza];
+      img.parentElement.hidden = !ruta;
+      if (ruta) img.setAttribute("src", "../" + ruta);
+      else img.removeAttribute("src");
+    });
     pieza.querySelector("[data-bajar]").innerHTML = pub ? descargas(pub, o.id) : "";
     textoNoches();
     say(avisoForm, "");

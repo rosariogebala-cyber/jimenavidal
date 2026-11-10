@@ -113,7 +113,7 @@
       </div>
       <aside class="jg-vista" aria-labelledby="jg-vista-titulo">
         <h3 id="jg-vista-titulo">Vista previa de la web</h3>
-        <p class="jv-hint">Se actualiza a medida que editás. Las imágenes finales para la web, post y reel se generan al&nbsp;guardar.</p>
+        <p class="jv-hint">Se actualiza a medida que editás. Guardá como pendiente para generar y revisar las piezas finales antes de&nbsp;publicar.</p>
         <article class="jg-vista-ficha" data-vista-oferta>
           <div class="jg-vista-foto">
             <img alt="" hidden>
@@ -128,11 +128,16 @@
         </article>
       </aside>
       </div>
-      <figure class="jg-pieza" hidden>
-        <img alt="">
-        <figcaption>Última pieza generada. Los cambios de arriba todavía están en&nbsp;edición.</figcaption>
+      <details class="jg-pieza" hidden>
+        <summary>Ver las últimas piezas generadas</summary>
+        <p class="jv-hint">Corresponden a la última versión procesada. Los cambios del formulario se reflejan después de&nbsp;guardar.</p>
+        <div class="jg-piezas">
+          <figure><img data-pieza="card" alt="" loading="lazy"><figcaption>Ficha web</figcaption></figure>
+          <figure><img data-pieza="post" alt="" loading="lazy"><figcaption>Post</figcaption></figure>
+          <figure><img data-pieza="reel" alt="" loading="lazy"><figcaption>Reel</figcaption></figure>
+        </div>
         <div data-bajar></div>
-      </figure>
+      </details>
       <div class="jv-actions">
         <button class="jv-go" type="submit" value="guardar" data-guardar hidden>Guardar</button>
         <button class="jv-go" type="submit" value="publicada" data-publicar>Publicar</button>
