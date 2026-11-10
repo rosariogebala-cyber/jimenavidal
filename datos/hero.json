@@ -44,21 +44,6 @@
       "estilo": ""
     },
     {
-      "id": "s3",
-      "etiqueta": "Otros destinos",
-      "video": "https://cdn.pixabay.com/video/2025/01/12/252077_medium.mp4",
-      "foto": "",
-      "descripcion": "Camellos frente a las pirámides de Guiza, en Egipto",
-      "lugar": "Egipto",
-      "titulo": "Si el destino es otro,",
-      "destacado": "también lo armamos.",
-      "bajada": "Riviera Maya, Dominicana o el destino que tengas en mente.",
-      "etiquetas": [],
-      "boton": "Escribinos ahora",
-      "mensaje": "Hola, quiero consultar un pasaje al exterior",
-      "estilo": ""
-    },
-    {
       "id": "s67d1d0ea03",
       "etiqueta": "",
       "video": "",
@@ -70,6 +55,21 @@
       "bajada": "",
       "etiquetas": [],
       "boton": "Quiero viajar",
+      "mensaje": "Hola, quiero consultar un pasaje al exterior",
+      "estilo": ""
+    },
+    {
+      "id": "s3",
+      "etiqueta": "Otros destinos",
+      "video": "https://cdn.pixabay.com/video/2025/01/12/252077_medium.mp4",
+      "foto": "",
+      "descripcion": "Camellos frente a las pirámides de Guiza, en Egipto",
+      "lugar": "Egipto",
+      "titulo": "Si el destino es otro,",
+      "destacado": "también lo armamos.",
+      "bajada": "Riviera Maya, Dominicana o el destino que tengas en mente.",
+      "etiquetas": [],
+      "boton": "Escribinos ahora",
       "mensaje": "Hola, quiero consultar un pasaje al exterior",
       "estilo": ""
     },
