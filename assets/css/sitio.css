@@ -188,6 +188,31 @@ button, input { font-family: inherit; }
   color: var(--ink);
 }
 
+.nx-brand .jv-logo {
+  display: block;
+  width: auto;
+  height: 56px;
+}
+@media (max-width: 991.98px) {
+  .nx-brand .jv-logo { height: 46px; }
+}
+
+.jv-ig {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 18px;
+  text-decoration: none;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.jv-ig:hover,
+.jv-ig:focus-visible { color: var(--green); border-color: currentColor; }
+
 .nx-brand-logo {
   display: block;
   width: auto;
