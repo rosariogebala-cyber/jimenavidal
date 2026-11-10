@@ -165,5 +165,29 @@
       "precio_nota": "Plan familiar (2 adulto + 2 menores hasta 11 años)",
       "precio_antes": 4000
     }
+  },
+  {
+    "id": "74cb0a1254044ea0ac27e5029b5f38d0",
+    "estado": "publicada",
+    "orden": 7,
+    "foto": "74cb0a1254044ea0ac27e5029b5f38d0.jpg",
+    "datos": {
+      "destino": "Calafate",
+      "noches": 7,
+      "origen": "",
+      "fechas": "",
+      "vuelo": "directo",
+      "incluye": [
+        "aereo",
+        "hotel"
+      ],
+      "regimen": "Media pensión",
+      "moneda": "USD",
+      "precio_antes": 0,
+      "precio": 400,
+      "precio_nota": "Por pasajero adulto en base doble",
+      "hotel": "",
+      "estrellas": 0
+    }
   }
 ]
