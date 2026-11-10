@@ -1,0 +1,92 @@
+{
+  "slides": [
+    {
+      "id": "s67d1d0ea03",
+      "etiqueta": "",
+      "video": "",
+      "foto": "s67d1d0ea03.jpg",
+      "descripcion": "",
+      "lugar": "",
+      "titulo": "Pensando en las",
+      "destacado": "Vacaciones 2027?",
+      "bajada": "Te damos tu mejor opcion",
+      "etiquetas": [],
+      "boton": "Quiero viajar",
+      "mensaje": "Hola, quiero consultar un pasaje al exterior",
+      "estilo": ""
+    },
+    {
+      "id": "s1",
+      "etiqueta": "Funes",
+      "video": "https://videos.pexels.com/video-files/19957788/19957788-sd_960_540_30fps.mp4",
+      "foto": "",
+      "descripcion": "Atardecer en la costa",
+      "lugar": "Da Nang",
+      "titulo": "Diseñamos tu viaje",
+      "destacado": "desde Funes.",
+      "bajada": "Hace 15 años armamos pasajes y paquetes con hotel, desde Funes.",
+      "etiquetas": [
+        {
+          "icono": "bi-airplane",
+          "texto": "Aéreo y hotel"
+        },
+        {
+          "icono": "bi-people",
+          "texto": "Plan familiar"
+        },
+        {
+          "icono": "bi-ticket-perforated",
+          "texto": "Check-in y equipaje"
+        }
+      ],
+      "boton": "Quiero viajar",
+      "mensaje": "Hola, quiero consultar un pasaje al exterior",
+      "estilo": ""
+    },
+    {
+      "id": "s2",
+      "etiqueta": "Europa",
+      "video": "https://videos.pexels.com/video-files/36540548/15494248_1280_720_60fps.mp4",
+      "foto": "",
+      "descripcion": "Vista aérea del Coliseo de Roma al amanecer",
+      "lugar": "Roma",
+      "titulo": "Si vas a Europa,",
+      "destacado": "te lo explicamos.",
+      "bajada": "Te contamos el ingreso EES, el equipaje y el check-in antes de salir.",
+      "etiquetas": [],
+      "boton": "Consultar ahora",
+      "mensaje": "Hola, quiero consultar un pasaje al exterior",
+      "estilo": ""
+    },
+    {
+      "id": "s3",
+      "etiqueta": "Otros destinos",
+      "video": "https://cdn.pixabay.com/video/2025/01/12/252077_medium.mp4",
+      "foto": "",
+      "descripcion": "Camellos frente a las pirámides de Guiza, en Egipto",
+      "lugar": "Egipto",
+      "titulo": "Si el destino es otro,",
+      "destacado": "también lo armamos.",
+      "bajada": "Riviera Maya, Dominicana o el destino que tengas en mente.",
+      "etiquetas": [],
+      "boton": "Escribinos ahora",
+      "mensaje": "Hola, quiero consultar un pasaje al exterior",
+      "estilo": ""
+    },
+    {
+      "id": "s4",
+      "etiqueta": "Quince años",
+      "video": "https://videos.pexels.com/video-files/30118059/12916819_1280_720_30fps.mp4",
+      "foto": "",
+      "descripcion": "Vista aérea de la playa de Cancún",
+      "lugar": "Cancún",
+      "titulo": "Quince años armando viajes",
+      "destacado": "",
+      "bajada": "Jimena y Laura te escuchan y arman la salida a tu medida.",
+      "etiquetas": [],
+      "boton": "Quiero viajar",
+      "mensaje": "Hola, quiero consultar un pasaje al exterior",
+      "estilo": "grande"
+    }
+  ]
+}
