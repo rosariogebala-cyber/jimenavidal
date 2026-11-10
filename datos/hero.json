@@ -59,21 +59,6 @@
       "estilo": ""
     },
     {
-      "id": "s4",
-      "etiqueta": "Quince años",
-      "video": "https://videos.pexels.com/video-files/30118059/12916819_1280_720_30fps.mp4",
-      "foto": "",
-      "descripcion": "Vista aérea de la playa de Cancún",
-      "lugar": "Cancún",
-      "titulo": "Quince años armando viajes",
-      "destacado": "",
-      "bajada": "Jimena y Laura te escuchan y arman la salida a tu medida.",
-      "etiquetas": [],
-      "boton": "Quiero viajar",
-      "mensaje": "Hola, quiero consultar un pasaje al exterior",
-      "estilo": "grande"
-    },
-    {
       "id": "s67d1d0ea03",
       "etiqueta": "",
       "video": "",
@@ -87,6 +72,21 @@
       "boton": "Quiero viajar",
       "mensaje": "Hola, quiero consultar un pasaje al exterior",
       "estilo": ""
+    },
+    {
+      "id": "s4",
+      "etiqueta": "Quince años",
+      "video": "https://videos.pexels.com/video-files/30118059/12916819_1280_720_30fps.mp4",
+      "foto": "",
+      "descripcion": "Vista aérea de la playa de Cancún",
+      "lugar": "Cancún",
+      "titulo": "Quince años armando viajes",
+      "destacado": "",
+      "bajada": "Jimena y Laura te escuchan y arman la salida a tu medida.",
+      "etiquetas": [],
+      "boton": "Quiero viajar",
+      "mensaje": "Hola, quiero consultar un pasaje al exterior",
+      "estilo": "grande"
     }
   ]
 }
