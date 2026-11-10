@@ -90,7 +90,18 @@ function graph(env, path, options = {}) {
   });
 }
 
+export function destinatario(env, to) {
+  const allowed = env.WA_ALLOWED_NUMBERS.split(',').map(n => n.trim()).filter(Boolean);
+  if (env.WA_MODE === 'prueba' && env.WA_TEST_RECIPIENT &&
+      allowed.length === 1 && allowed[0] === to) {
+    if (!/^\d{8,15}$/.test(env.WA_TEST_RECIPIENT)) throw new Error('Destinatario de prueba inválido');
+    return env.WA_TEST_RECIPIENT;
+  }
+  return to;
+}
+
 function mensaje(env, to, content) {
+  to = destinatario(env, to);
   return graph(env, env.WA_PHONE_NUMBER_ID + '/messages', {
     method: 'POST',
     body: JSON.stringify({ messaging_product: 'whatsapp', recipient_type: 'individual', to, ...content }),
