@@ -598,6 +598,12 @@
     vistaVideo.hidden = !activo || !urlMedio(link, true);
     if (vistaVideo.hidden) { vistaVideo.pause(); vistaVideo.removeAttribute("src"); }
     else if (vistaVideo.getAttribute("src") !== link) vistaVideo.src = link;
+    form.querySelector("[data-video-marco]").hidden = vistaVideo.hidden;
+    form.querySelector("[data-overlay-aviso]").hidden = !activo;
+    var capa = form.querySelector("[data-video-overlay]");
+    var rutaCapa = editando && publicado.ofertas[editando] && publicado.ofertas[editando].overlay;
+    capa.hidden = !rutaCapa || vistaVideo.hidden;
+    if (rutaCapa) capa.src = "../" + rutaCapa; else capa.removeAttribute("src");
     fotoVista.hidden = !vistaVideo.hidden || !(fotoNueva || fotoOriginal);
     vistaOferta.querySelector(".jg-vista-foto > span").hidden = !vistaVideo.hidden || !!(fotoNueva || fotoOriginal);
     var poster = fotoNueva ? fotoNueva.vista : fotoOriginal;
