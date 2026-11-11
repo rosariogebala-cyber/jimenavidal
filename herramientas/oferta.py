@@ -988,22 +988,22 @@ def promo_card(oid, src, alt, meta_html, title, price_html, includes_html, detai
     col = "col-6 col-lg-3 jv-destacada" if featured else "col-6 col-lg-3"
     fechas = "".join(' data-%s="%s"' % (k, escape(v, quote=True)) for k, v in (("desde", desde), ("hasta", hasta)) if v)
     media = (
-        '<video controls playsinline preload="none" poster="%s" src="%s" aria-label="%s" style="width:100%%;height:100%%;object-fit:cover"></video>'
+        '<video autoplay muted loop playsinline preload="metadata" poster="%s" src="%s" aria-label="%s" style="display:block;width:100%%;aspect-ratio:1;object-fit:cover;border-radius:12px;margin:12px 0"></video>'
         % (escape(src, quote=True), escape(video, quote=True), escape(title, quote=True))
-        if video else
-        '<button type="button" class="jv-zoom" data-zoom="%s" aria-label="%s"><img src="%s" alt="%s"></button>'
+        if video else ""
+    )
+    foto = "" if video else (
+        '<div class="nx-frame ratio-1"><button type="button" class="jv-zoom" data-zoom="%s" aria-label="%s"><img src="%s" alt="%s"></button></div>'
         % (escape(src, quote=True), escape("Ver " + title, quote=True), escape(src, quote=True), escape(alt, quote=True))
     )
     return (
         '<div class="%s"><article class="prod-card prod-card-xl" data-oferta="%s" data-filtros="%s"%s>'
-        '<div class="nx-frame ratio-1">'
-        '%s</div>'
-        '<div class="pad"><h3>%s</h3>%s%s%s%s'
+        '%s<div class="pad"><h3>%s</h3>%s%s%s%s%s'
         '<a class="prod-more" href="%s" target="_blank" rel="noopener">Escribinos <i class="bi bi-whatsapp"></i></a>'
         "</div></article></div>"
     ) % (
-        col, escape(oid, quote=True), escape(filtros, quote=True), fechas, media,
-        nb_html(title), meta, price_html, includes_html, sale, escape(href, quote=True),
+        col, escape(oid, quote=True), escape(filtros, quote=True), fechas, foto,
+        nb_html(title), meta, price_html, includes_html, sale, media, escape(href, quote=True),
     )
 
 
