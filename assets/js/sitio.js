@@ -37,7 +37,7 @@
     requestAnimationFrame(function () { document.documentElement.classList.add("mq-ready"); });
   });
 
-  var landingSections = Array.prototype.slice.call(document.querySelectorAll(".landing-page > section[data-module]"));
+  var landingSections = Array.prototype.slice.call(document.querySelectorAll(":is(.landing-page, .landing-page > main) > section[data-module]"));
   if (landingSections.length) {
     var SECTION_IDS = {
       "navegacion": "inicio",
@@ -140,7 +140,7 @@
       return null;
     };
 
-    document.querySelectorAll(".landing-page > section[data-module] a[href]").forEach(function (a) {
+    document.querySelectorAll(":is(.landing-page, .landing-page > main) > section[data-module] a[href]").forEach(function (a) {
       var href = a.getAttribute("href");
       var own = a.closest("section[data-module]");
       var isHash = href.charAt(0) === "#";

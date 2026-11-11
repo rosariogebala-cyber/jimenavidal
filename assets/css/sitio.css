@@ -1052,7 +1052,7 @@ body:not(.lib-page) .mq-caption { max-width: none; padding-inline: calc(var(--nx
 /* Landings generadas */
 .landing-page { background: var(--paper); }
 .landing-page .mq-block { padding: 0; }
-.landing-page > section[data-module] { scroll-margin-top: var(--nx-nav-h, 0px); }
+.landing-page > section[data-module], .landing-page > main > section[data-module] { scroll-margin-top: var(--nx-nav-h, 0px); }
 html:has(> .landing-page) { scroll-behavior: smooth; }
 .landing-page > section[data-module^="navegacion"] {
   position: sticky;
@@ -1184,3 +1184,7 @@ html:has(> .landing-page) { scroll-behavior: smooth; }
 /* Plataforma con la marca Lanzate. Los módulos de muestra conservan sus colores. */
 
 /* Consultas */
+
+.jv-skip { position: fixed; inset: 12px auto auto 12px; z-index: 1100; padding: 12px 16px; color: #121212; background: #fff; }
+.jv-skip:not(:focus) { clip-path: inset(50%); }
+#contenido-principal { scroll-margin-top: var(--nx-nav-h, 0px); }

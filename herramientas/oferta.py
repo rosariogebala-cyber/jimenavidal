@@ -934,7 +934,7 @@ def note_band(html):
         '<label class="visually-hidden" for="jv-email">Tu email</label>'
         '<div class="foot-form">'
         '<input id="jv-email" type="email" name="email" placeholder="Tu email" autocomplete="email" required>'
-        '<input type="text" name="web" tabindex="-1" autocomplete="off" class="visually-hidden" aria-hidden="true">'
+        '<input type="text" name="web" tabindex="-1" autocomplete="off" aria-hidden="true" hidden>'
         '<button class="btn-nx-light" type="submit">Enviar</button>'
         '</div>'
         '<p class="foot-form-note" data-form-msg aria-live="polite"></p>'
