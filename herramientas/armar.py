@@ -285,7 +285,7 @@ def portada(html):
                 escape(href), escape(s["boton"]))
         secundario = '<a class="btn-nx-outline" href="#productos">Ver promociones</a>' if activo else ""
         acciones = '<div class="d-flex flex-wrap gap-2 mt-4">%s%s</div>' % (boton, secundario) if boton or secundario else ""
-        encabezado = "h1" if activo else "h2"
+        encabezado = "h2"
         items.append(
             '<div class="carousel-item%s%s"><div class="nx-hero-slide">%s%s<div class="container"><div class="col-lg-7">'
             '<%s class="nx-display">%s</%s>%s%s%s</div></div></div></div>' % (
