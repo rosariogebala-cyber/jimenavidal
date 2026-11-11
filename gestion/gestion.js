@@ -592,6 +592,7 @@
   }
   function actualizarVideoVista() {
     var activo = form.tipo_medio.value === "video";
+    vistaOferta.querySelector(".jg-vista-foto").hidden = activo;
     form.querySelector("[data-video-campos]").hidden = !activo;
     var link = form.video_oferta.value.trim();
     vistaVideo.hidden = !activo || !urlMedio(link, true);
