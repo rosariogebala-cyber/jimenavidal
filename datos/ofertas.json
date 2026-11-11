@@ -225,7 +225,7 @@
     "id": "3e93d722fc6343e6a158c32f02712c8d",
     "estado": "pendiente",
     "orden": 7,
-    "foto": "",
+    "foto": "3e93d722fc6343e6a158c32f02712c8d-mwbdj82w.jpg",
     "datos": {
       "destino": "Punta Cana",
       "noches": 7,
@@ -244,6 +244,7 @@
       "precio_nota": "Por pasajero adulto en base doble",
       "hotel": "Barceló Bávaro",
       "estrellas": 5
-    }
+    },
+    "video": "https://media.istockphoto.com/id/1131358126/es/v%C3%ADdeo/sobrevolando-monta%C3%B1as-multicolor-en-quebrada-colorado-argentina-salta.mp4?s=mp4-640x640-is&k=20&c=tIur7TrtItyMSU09Qe1yWos9A5i17aj0nuIkXnfsU9Q="
   }
 ]
