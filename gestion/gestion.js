@@ -642,7 +642,40 @@
     detalle.hidden = !detalle.textContent;
   }
 
+  var propuestaTexto = null;
+  var panelTexto = form.querySelector("[data-importar-texto]");
+  var resultadoTexto = form.querySelector("[data-propuesta-texto]");
+  var aplicarTexto = form.querySelector("[data-aplicar-texto]");
+  form.querySelector("[data-analizar-texto]").addEventListener("click", function () {
+    var texto = form.querySelector("[data-texto-proveedor]").value.trim();
+    if (!texto) { resultadoTexto.textContent = "Pegá el texto de la oferta."; aplicarTexto.hidden = true; return; }
+    propuestaTexto = window.JVTextoOferta(texto);
+    var etiquetas = { destino: "Destino", noches: "Noches", origen: "Sale de", fechas: "Fecha de viaje", hotel: "Hotel", estrellas: "Estrellas", regimen: "Régimen", moneda: "Moneda", precio: "Precio", precio_nota: "Plan", vuelo: "Vuelo", incluye: "Incluye" };
+    resultadoTexto.textContent = Object.keys(propuestaTexto.datos).map(function (k) {
+      var v = propuestaTexto.datos[k];
+      return etiquetas[k] + ": " + (Array.isArray(v) ? v.join(", ") || "Revisar manualmente" : v);
+    }).join("\n") + "\n\nPara revisar:\n" + propuestaTexto.avisos.concat(["Agregá la foto y revisá todos los datos antes de publicar."]).join("\n");
+    aplicarTexto.hidden = false;
+  });
+  aplicarTexto.addEventListener("click", function () {
+    if (!propuestaTexto) return;
+    if (!window.confirm("¿Reemplazar los datos de la oferta con esta propuesta? La foto y las fechas de publicación se conservan.")) return;
+    ["destino", "noches", "origen", "fechas", "hotel", "estrellas", "regimen", "precio", "precio_antes", "precio_nota", "vuelo"].forEach(function (k) { form[k].value = propuestaTexto.datos[k] || ""; });
+    form.moneda.value = propuestaTexto.datos.moneda || "USD";
+    form.querySelectorAll('input[name="incluye"]').forEach(function (el) { el.checked = propuestaTexto.datos.incluye.indexOf(el.value) !== -1; });
+    textoNoches();
+    actualizarVistaOferta();
+    say(avisoForm, "Propuesta cargada. Revisá los campos, la moneda, la foto y las fechas antes de guardar.", "warn");
+    panelTexto.open = false;
+    form.destino.focus();
+  });
+
   function abrir(o) {
+    propuestaTexto = null;
+    panelTexto.open = false;
+    form.querySelector("[data-texto-proveedor]").value = "";
+    resultadoTexto.textContent = "";
+    aplicarTexto.hidden = true;
     var d = o ? o.datos || {} : {};
     editando = o ? o.id : "";
     estadoEditando = o ? o.estado : "";
