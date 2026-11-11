@@ -70,7 +70,7 @@
       <label>Contenido en la web<select name="tipo_medio"><option value="foto">Foto</option><option value="video">Video</option></select></label>
       <div data-video-campos hidden>
         <label>Enlace directo al video MP4<input name="video_oferta" type="url" placeholder="https://…/video.mp4"></label>
-        <p class="jv-hint">El video se reproduce con controles en la web. Agregá una foto de portada para las piezas de redes.</p>
+        <p class="jv-hint">El video aparece debajo del texto, se reproduce solo, sin sonido y en bucle. Agregá una foto de portada para las piezas de redes.</p>
       </div>
       <label>Foto o portada<input type="file" name="foto" accept="image/jpeg,image/png,image/webp"></label>
       <label>O cargar foto desde un enlace<input name="foto_url" type="url" placeholder="https://…/foto.jpg"></label>
@@ -133,7 +133,7 @@
         <article class="jg-vista-ficha" data-vista-oferta>
           <div class="jg-vista-foto">
             <img alt="" hidden>
-            <video data-vista-video controls playsinline preload="metadata" hidden style="width:100%;height:100%;object-fit:cover"></video>
+
             <span><i class="bi bi-image" aria-hidden="true"></i> Foto del destino</span>
           </div>
           <h4 data-vista-destino></h4>
@@ -141,6 +141,7 @@
           <p class="jg-vista-precio" data-vista-precio hidden></p>
           <p class="jg-vista-incluye" data-vista-incluye hidden></p>
           <p class="jg-vista-detalle" data-vista-detalle hidden></p>
+          <video data-vista-video autoplay muted loop playsinline preload="metadata" hidden style="display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;margin:12px 0"></video>
           <span class="jg-vista-cta">Escribinos <i class="bi bi-whatsapp" aria-hidden="true"></i></span>
         </article>
       </aside>
