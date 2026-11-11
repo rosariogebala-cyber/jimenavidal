@@ -56,6 +56,14 @@
     <div class="jg-acciones"><button class="jv-nueva" type="button">Nueva oferta</button></div>
     <form class="jv-form" hidden novalidate>
       <h2 data-form-title>Nueva oferta</h2>
+      <details class="jg-ayuda" data-importar-texto>
+        <summary>Completar desde un texto del proveedor</summary>
+        <p class="jv-hint">Pegá el texto y revisá la propuesta. La foto y las fechas de publicación se cargan aparte. Esta primera versión reconoce formatos habituales; los datos ambiguos se completan a mano.</p>
+        <label>Texto de la oferta<textarea data-texto-proveedor rows="7" maxlength="12000" style="width:100%" placeholder="Punta Cana · 7 noches&#10;Salida desde Ezeiza el 15 de enero&#10;Hotel Barceló Bávaro 5★ · All inclusive&#10;Aéreo y traslados incluidos&#10;USD 1.850 por persona, base doble"></textarea></label>
+        <button type="button" data-analizar-texto>Preparar propuesta</button>
+        <div data-propuesta-texto role="status" style="white-space:pre-line"></div>
+        <button type="button" data-aplicar-texto hidden>Usar estos datos en el formulario</button>
+      </details>
       <div class="jg-editor">
       <div>
       <label>Destino<input name="destino" maxlength="40" required placeholder="Riviera Maya"></label>
@@ -265,6 +273,6 @@
   </div>
 </main>
 
-<script src="gestion.js"></script>
+<script src="texto-oferta.js?v=1"></script>\n<script src="gestion.js"></script>
 </body>
 </html>
