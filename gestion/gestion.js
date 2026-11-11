@@ -583,11 +583,59 @@
     return "";
   }
 
+  var vistaVideo = form.querySelector("[data-vista-video]");
+  function urlMedio(value, video) {
+    try {
+      var u = new URL(value);
+      return u.protocol === "https:" && !u.username && !u.password && (!video || /\.mp4$/i.test(u.pathname));
+    } catch (_) { return false; }
+  }
+  function actualizarVideoVista() {
+    var activo = form.tipo_medio.value === "video";
+    form.querySelector("[data-video-campos]").hidden = !activo;
+    var link = form.video_oferta.value.trim();
+    vistaVideo.hidden = !activo || !urlMedio(link, true);
+    if (vistaVideo.hidden) { vistaVideo.pause(); vistaVideo.removeAttribute("src"); }
+    else if (vistaVideo.getAttribute("src") !== link) vistaVideo.src = link;
+    fotoVista.hidden = !vistaVideo.hidden || !(fotoNueva || fotoOriginal);
+    vistaOferta.querySelector(".jg-vista-foto > span").hidden = !vistaVideo.hidden || !!(fotoNueva || fotoOriginal);
+    var poster = fotoNueva ? fotoNueva.vista : fotoOriginal;
+    if (poster) vistaVideo.poster = poster; else vistaVideo.removeAttribute("poster");
+  }
+  form.tipo_medio.addEventListener("change", actualizarVideoVista);
+  form.video_oferta.addEventListener("change", actualizarVideoVista);
+  var cargaFotoId = 0;
+  form.querySelector("[data-cargar-foto-url]").addEventListener("click", async function () {
+    var link = form.foto_url.value.trim();
+    var aviso = form.querySelector("[data-foto-url-msg]");
+    if (!urlMedio(link, false)) { aviso.textContent = "Pegá un enlace HTTPS directo a una imagen."; return; }
+    var carga = ++cargaFotoId;
+    fotoEnProceso = true;
+    aviso.textContent = "Descargando foto…";
+    try {
+      var r = await fetch(link, { credentials: "omit", signal: AbortSignal.timeout(20000) });
+      if (!r.ok || !/^image\/(jpeg|png|webp)(;|$)/i.test(r.headers.get("content-type") || "")) throw new Error("imagen");
+      if (+r.headers.get("content-length") > 15 * 1024 * 1024) throw new Error("tamaño");
+      var blob = await r.blob();
+      if (blob.size > 15 * 1024 * 1024) throw new Error("tamaño");
+      var foto = await prepararFoto(new File([blob], "foto-enlace", { type: blob.type }));
+      if (carga !== cargaFotoId) return;
+      fotoNueva = foto;
+      form.foto.value = "";
+      actualizarFotoVista();
+      actualizarVistaOferta();
+      aviso.textContent = "Foto cargada. Se guardará al guardar la oferta.";
+    } catch (_) {
+      if (carga === cargaFotoId) aviso.textContent = "No se pudo descargar. El servidor puede bloquear la carga desde enlaces. Descargá la foto y subila como archivo.";
+    } finally { if (carga === cargaFotoId) fotoEnProceso = false; }
+  });
+
   function actualizarFotoVista() {
     var src = fotoNueva ? fotoNueva.vista : fotoOriginal;
     fotoVista.hidden = !src;
     if (src) fotoVista.setAttribute("src", src);
     else fotoVista.removeAttribute("src");
+    actualizarVideoVista();
   }
 
   function hotelCoincideConOrigen(hotel, origen) {
@@ -706,6 +754,11 @@
       el.checked = keys.indexOf(el.value) !== -1;
     });
     form.foto.value = "";
+    cargaFotoId += 1;
+    form.tipo_medio.value = o && o.video ? "video" : "foto";
+    form.video_oferta.value = o && o.video || "";
+    form.foto_url.value = "";
+    form.querySelector("[data-foto-url-msg]").textContent = "El enlace debe permitir descargar la imagen. La foto se guarda en el sitio.";
     fotoOriginal = o && o.foto ? (fotosLocales[o.id] || RAW + RAMA + "/datos/fotos/" + o.foto) : "";
     actualizarFotoVista();
     actualizarVistaOferta();
@@ -728,6 +781,8 @@
 
   function cerrar() {
     form.hidden = true;
+    cargaFotoId += 1;
+    vistaVideo.pause();
     editando = "";
     estadoEditando = "";
     fotoNueva = null;
@@ -750,8 +805,11 @@
     e.preventDefault();
     var accion = (e.submitter && e.submitter.value) || (editando ? "guardar" : "pendiente");
     var estado = accion === "guardar" ? estadoEditando || "pendiente" : accion;
+    var videoOferta = form.tipo_medio.value === "video" ? form.video_oferta.value.trim() : "";
     var datos = datosDelForm();
     var error = soloLectura ? SIN_PERMISO : validar(datos);
+    if (!error && form.tipo_medio.value === "video" && !urlMedio(videoOferta, true)) error = "Pegá un enlace HTTPS directo a un archivo .mp4.";
+    if (!error && videoOferta && !fotoNueva && !fotoOriginal) error = "Agregá una foto de portada para el video y las piezas de redes.";
     if (!error && fotoEnProceso) error = "Esperá a que termine de cargar la foto.";
     if (error) { say(avisoForm, error, "warn"); return; }
     var id = editando || nuevoId();
@@ -775,6 +833,7 @@
       }
       if ("destacada" in (o.datos || {})) datos.destacada = o.datos.destacada;
       o.datos = datos;
+      if (videoOferta) o.video = videoOferta; else delete o.video;
       if (desde) o.desde = desde; else delete o.desde;
       if (hasta) o.hasta = hasta; else delete o.hasta;
       if (!foto) return { archivos: [] };
@@ -799,6 +858,7 @@
   });
 
   form.foto.addEventListener("change", function () {
+    cargaFotoId += 1;
     var file = form.foto.files[0];
     fotoNueva = null;
     fotoEnProceso = !!file;
@@ -891,7 +951,7 @@
       if (!o) throw new Error("Esa oferta ya no existe. Tocá Actualizar.");
       var datos = JSON.parse(JSON.stringify(o.datos || {}));
       delete datos.destacada;
-      lista.push({ id: copia, estado: "pendiente", orden: siguienteOrden(lista, "pendiente"), foto: o.foto || "", datos: datos });
+      lista.push({ id: copia, estado: "pendiente", orden: siguienteOrden(lista, "pendiente"), foto: o.foto || "", ...(o.video ? { video: o.video } : {}), datos: datos });
     }, "duplica " + nombre(id)).then(function () {
       if (fotosLocales[id]) fotosLocales[copia] = fotosLocales[id];
       abrir(ofertaPor(copia));
