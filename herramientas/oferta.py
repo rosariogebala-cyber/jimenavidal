@@ -981,23 +981,28 @@ def filter_tags(offer):
     return " ".join(tags)
 
 
-def promo_card(oid, src, alt, meta_html, title, price_html, includes_html, detail, href, featured=False, filtros="", desde="", hasta=""):
+def promo_card(oid, src, alt, meta_html, title, price_html, includes_html, detail, href, featured=False, filtros="", desde="", hasta="", video=""):
     """Entran de a cuatro. Las destacadas llevan jv-destacada y la landing las sube sobre el hero."""
     meta = '<p class="meta">%s</p>' % meta_html if meta_html else ""
     sale = '<p class="prod-sale">%s</p>' % nb_html(detail) if detail else ""
     col = "col-6 col-lg-3 jv-destacada" if featured else "col-6 col-lg-3"
     fechas = "".join(' data-%s="%s"' % (k, escape(v, quote=True)) for k, v in (("desde", desde), ("hasta", hasta)) if v)
+    media = (
+        '<video controls playsinline preload="none" poster="%s" src="%s" aria-label="%s" style="width:100%%;height:100%%;object-fit:cover"></video>'
+        % (escape(src, quote=True), escape(video, quote=True), escape(title, quote=True))
+        if video else
+        '<button type="button" class="jv-zoom" data-zoom="%s" aria-label="%s"><img src="%s" alt="%s"></button>'
+        % (escape(src, quote=True), escape("Ver " + title, quote=True), escape(src, quote=True), escape(alt, quote=True))
+    )
     return (
         '<div class="%s"><article class="prod-card prod-card-xl" data-oferta="%s" data-filtros="%s"%s>'
         '<div class="nx-frame ratio-1">'
-        '<button type="button" class="jv-zoom" data-zoom="%s" aria-label="%s">'
-        '<img src="%s" alt="%s"></button></div>'
+        '%s</div>'
         '<div class="pad"><h3>%s</h3>%s%s%s%s'
         '<a class="prod-more" href="%s" target="_blank" rel="noopener">Escribinos <i class="bi bi-whatsapp"></i></a>'
         "</div></article></div>"
     ) % (
-        col, escape(oid, quote=True), escape(filtros, quote=True), fechas, escape(src, quote=True), escape("Ver " + title, quote=True),
-        escape(src, quote=True), escape(alt, quote=True),
+        col, escape(oid, quote=True), escape(filtros, quote=True), fechas, media,
         nb_html(title), meta, price_html, includes_html, sale, escape(href, quote=True),
     )
 
