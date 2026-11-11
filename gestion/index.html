@@ -67,7 +67,15 @@
       <div class="jg-editor">
       <div>
       <label>Destino<input name="destino" maxlength="40" required placeholder="Riviera Maya"></label>
-      <label>Foto del destino<input type="file" name="foto" accept="image/jpeg,image/png,image/webp"></label>
+      <label>Contenido en la web<select name="tipo_medio"><option value="foto">Foto</option><option value="video">Video</option></select></label>
+      <div data-video-campos hidden>
+        <label>Enlace directo al video MP4<input name="video_oferta" type="url" placeholder="https://…/video.mp4"></label>
+        <p class="jv-hint">El video se reproduce con controles en la web. Agregá una foto de portada para las piezas de redes.</p>
+      </div>
+      <label>Foto o portada<input type="file" name="foto" accept="image/jpeg,image/png,image/webp"></label>
+      <label>O cargar foto desde un enlace<input name="foto_url" type="url" placeholder="https://…/foto.jpg"></label>
+      <button type="button" data-cargar-foto-url>Cargar foto del enlace</button>
+      <p class="jv-hint" data-foto-url-msg role="status">El enlace debe permitir descargar la imagen. La foto se guarda en el sitio.</p>
       <p class="jv-hint">La foto se adapta al tamaño de la&nbsp;pieza.</p>
       <div class="jv-row">
         <label>Noches<input name="noches" type="number" min="1" max="21" value="7"></label>
@@ -125,6 +133,7 @@
         <article class="jg-vista-ficha" data-vista-oferta>
           <div class="jg-vista-foto">
             <img alt="" hidden>
+            <video data-vista-video controls playsinline preload="metadata" hidden style="width:100%;height:100%;object-fit:cover"></video>
             <span><i class="bi bi-image" aria-hidden="true"></i> Foto del destino</span>
           </div>
           <h4 data-vista-destino></h4>
