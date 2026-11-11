@@ -456,7 +456,7 @@ def letter(image, xy, text, face, fill, tracking=0, shadow=True):
     if shadow:
         place(2, 3, (0, 0, 0, 110))
     place(0, 0, ink)
-    return Image.alpha_composite(image.convert("RGBA"), layer).convert("RGB")
+    return Image.alpha_composite(image.convert("RGBA"), layer).convert(image.mode)
 
 
 def canvas(size, photo):
@@ -705,7 +705,7 @@ def _icon_shade(image, top):
     layer = Image.new("RGBA", (width, span), (0, 0, 0, 128))
     plate = Image.new("RGBA", image.size, (0, 0, 0, 0))
     plate.paste(layer, (0, top))
-    return Image.alpha_composite(image.convert("RGBA"), plate).convert("RGB")
+    return Image.alpha_composite(image.convert("RGBA"), plate).convert(image.mode)
 
 
 def _strip(image, items, pool=False):
@@ -726,7 +726,7 @@ def _strip(image, items, pool=False):
     strip_h = pad_y * 2 + rows * content + row_gap * (rows - 1)
     strip_top = height - strip_h
     if pool:
-        image = Image.alpha_composite(image.convert("RGBA"), price_corner(image.size, strip_top)).convert("RGB")
+        image = Image.alpha_composite(image.convert("RGBA"), price_corner(image.size, strip_top)).convert(image.mode)
     image = _icon_shade(image, strip_top)
     cursor = strip_top + pad_y
     for row in range(rows):
@@ -749,7 +749,7 @@ def paint_listing(image, offer, brand):
     if items:
         image, strip_top = _strip(image, items, pool=not offer.get("consultar"))
     elif not offer.get("consultar"):
-        image = Image.alpha_composite(image.convert("RGBA"), price_corner(image.size, strip_top)).convert("RGB")
+        image = Image.alpha_composite(image.convert("RGBA"), price_corner(image.size, strip_top)).convert(image.mode)
     lift = int(min(width, height) * 0.045)
     anchor = strip_top - lift
     if note:
@@ -883,6 +883,13 @@ def reel_bytes(offer, brand, photo=None):
     return jpeg_alta(render_reel(offer, brand, photo))
 
 
+def overlay_bytes(offer, brand):
+    image = paint_portada(Image.new("RGBA", CARD, (0, 0, 0, 0)), offer, brand)
+    out = io.BytesIO()
+    image.save(out, "PNG", optimize=True)
+    return out.getvalue()
+
+
 def card_bytes(offer, brand, photo=None):
     image = render(offer, brand, CARD, photo)
     quality = 86
@@ -981,29 +988,30 @@ def filter_tags(offer):
     return " ".join(tags)
 
 
-def promo_card(oid, src, alt, meta_html, title, price_html, includes_html, detail, href, featured=False, filtros="", desde="", hasta="", video=""):
+def promo_card(oid, src, alt, meta_html, title, price_html, includes_html, detail, href, featured=False, filtros="", desde="", hasta="", video="", overlay=""):
     """Entran de a cuatro. Las destacadas llevan jv-destacada y la landing las sube sobre el hero."""
     meta = '<p class="meta">%s</p>' % meta_html if meta_html else ""
     sale = '<p class="prod-sale">%s</p>' % nb_html(detail) if detail else ""
     col = "col-6 col-lg-3 jv-destacada" if featured else "col-6 col-lg-3"
     fechas = "".join(' data-%s="%s"' % (k, escape(v, quote=True)) for k, v in (("desde", desde), ("hasta", hasta)) if v)
     media = (
-        '<video autoplay muted loop playsinline preload="metadata" poster="%s" src="%s" aria-label="%s" style="display:block;width:100%%;aspect-ratio:1;object-fit:cover;border-radius:12px;margin:12px 0"></video>'
-        % (escape(src, quote=True), escape(video, quote=True), escape(title, quote=True))
-        if video else ""
-    )
-    foto = "" if video else (
+        '<div class="nx-frame ratio-1" style="position:relative;overflow:hidden">'
+        '<video autoplay muted loop playsinline preload="metadata" poster="%s" src="%s" aria-label="%s" style="display:block;width:100%%;height:100%%;object-fit:cover"></video>'
+        '<img src="%s" alt="%s" style="position:absolute;inset:0;width:100%%;height:100%%;pointer-events:none">'
+        '</div>'
+        % (escape(src, quote=True), escape(video, quote=True), escape(title, quote=True), escape(overlay, quote=True), escape(alt, quote=True))
+        if video and overlay else
         '<div class="nx-frame ratio-1"><button type="button" class="jv-zoom" data-zoom="%s" aria-label="%s"><img src="%s" alt="%s"></button></div>'
         % (escape(src, quote=True), escape("Ver " + title, quote=True), escape(src, quote=True), escape(alt, quote=True))
     )
     return (
         '<div class="%s"><article class="prod-card prod-card-xl" data-oferta="%s" data-filtros="%s"%s>'
-        '%s<div class="pad"><h3>%s</h3>%s%s%s%s%s'
+        '%s<div class="pad"><h3>%s</h3>%s%s%s%s'
         '<a class="prod-more" href="%s" target="_blank" rel="noopener">Escribinos <i class="bi bi-whatsapp"></i></a>'
         "</div></article></div>"
     ) % (
-        col, escape(oid, quote=True), escape(filtros, quote=True), fechas, foto,
-        nb_html(title), meta, price_html, includes_html, sale, media, escape(href, quote=True),
+        col, escape(oid, quote=True), escape(filtros, quote=True), fechas, media,
+        nb_html(title), meta, price_html, includes_html, sale, escape(href, quote=True),
     )
 
 
