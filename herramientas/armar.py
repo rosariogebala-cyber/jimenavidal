@@ -212,6 +212,13 @@ def piezas_de(sitio, ofertas, html):
             "clave": clave,
             "texto": piezas.caption(offer, brand, telefono),
         }
+        overlay = ""
+        if video_oferta(item.get("video", "")):
+            capa = piezas.overlay_bytes(offer, brand)
+            ruta_capa = "img/ofertas/" + item["id"] + "-overlay.png"
+            escribir(os.path.join(SALIDA, ruta_capa), capa)
+            overlay = ruta_capa + "?v=" + huella(capa)
+            estado[item["id"]]["overlay"] = overlay
         if item["id"] in ids_publicadas:
             href = piezas.offer_href(html, offer["destino"], offer["estadia"], offer.get("fechas", ""), offer.get("precio", ""))
             cards.append(piezas.promo_card(
@@ -219,7 +226,7 @@ def piezas_de(sitio, ofertas, html):
                 piezas.price_html(offer), piezas.includes_html(offer), detail, href,
                 featured=flags[item["id"]], filtros=piezas.filter_tags(offer),
                 desde=item.get("desde", ""), hasta=item.get("hasta", ""),
-                video=video_oferta(item.get("video", "")),
+                video=video_oferta(item.get("video", "")), overlay=overlay,
             ))
     if reusadas:
         print("Imágenes reusadas del sitio: %d de %d" % (reusadas, len(estado)))
