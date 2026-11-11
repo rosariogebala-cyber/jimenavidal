@@ -19,7 +19,7 @@ import unicodedata
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from html import escape
-from urllib.parse import quote, quote_plus
+from urllib.parse import quote, quote_plus, urlsplit
 from urllib.request import urlopen
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
@@ -119,6 +119,18 @@ def bajar_piezas(previo):
         return None
 
 
+def video_oferta(value):
+    if not isinstance(value, str):
+        return ""
+    try:
+        url = urlsplit(value)
+        if url.scheme == "https" and url.hostname and not url.username and not url.password and url.path.lower().endswith(".mp4"):
+            return value
+    except ValueError:
+        pass
+    return ""
+
+
 def piezas_de(sitio, ofertas, html):
     """Arma card, post y reel de cada promo. Devuelve las cards publicadas y el estado de cada una."""
     brand = piezas.brand_of(sitio["marca"])
@@ -207,6 +219,7 @@ def piezas_de(sitio, ofertas, html):
                 piezas.price_html(offer), piezas.includes_html(offer), detail, href,
                 featured=flags[item["id"]], filtros=piezas.filter_tags(offer),
                 desde=item.get("desde", ""), hasta=item.get("hasta", ""),
+                video=video_oferta(item.get("video", "")),
             ))
     if reusadas:
         print("Imágenes reusadas del sitio: %d de %d" % (reusadas, len(estado)))
