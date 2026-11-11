@@ -220,5 +220,30 @@
     },
     "hasta": "2026-11-12",
     "desde": "2026-11-11"
+  },
+  {
+    "id": "3e93d722fc6343e6a158c32f02712c8d",
+    "estado": "pendiente",
+    "orden": 7,
+    "foto": "",
+    "datos": {
+      "destino": "Punta Cana",
+      "noches": 7,
+      "origen": "Ezeiza",
+      "fechas": "15 de enero",
+      "vuelo": "",
+      "incluye": [
+        "aereo",
+        "traslado",
+        "hotel"
+      ],
+      "regimen": "All inclusive",
+      "moneda": "USD",
+      "precio_antes": 0,
+      "precio": 1850,
+      "precio_nota": "Por pasajero adulto en base doble",
+      "hotel": "Barceló Bávaro",
+      "estrellas": 5
+    }
   }
 ]
