@@ -13,6 +13,7 @@
   var PORTADA = "datos/hero.json";
   var CONTACTO = "datos/contacto.json";
   var SIN_PERMISO = "Esta clave puede ver pero no guardar. En GitHub, editá la clave y en Permissions → Contents elegí Read and write. Después tocá Salir y volvé a entrar.";
+  var FOTO_VACIA = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
   var token = localStorage.getItem(CLAVE) || sessionStorage.getItem(CLAVE) || "";
   var ofertas = [];
@@ -48,9 +49,17 @@
 
   var ocultarAviso = null;
 
+  function mover(node, block) {
+    node.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: block || "nearest"
+    });
+  }
+
   function say(node, text, tone) {
     node.textContent = text || "";
     node.className = (node === avisoApp ? "jg-toast " : "") + "jv-msg" + (tone ? " is-" + tone : "");
+    if (text && tone === "warn") mover(node);
     if (node !== avisoApp) return;
     clearTimeout(ocultarAviso);
     if (tone === "ok") ocultarAviso = setTimeout(function () { say(avisoApp, ""); }, 7000);
@@ -435,7 +444,7 @@
     art.className = "jv-item";
     art.setAttribute("data-id", o.id);
     art.innerHTML = [
-      src ? '<img src="' + esc(src) + '" alt="" loading="lazy">' : '<span class="jg-sin-foto" aria-hidden="true"><i class="bi bi-image"></i></span>',
+      src ? '<img src="' + esc(src) + '" alt="" width="1200" height="1200" loading="lazy" decoding="async">' : '<span class="jg-sin-foto" aria-hidden="true"><i class="bi bi-image" aria-hidden="true"></i></span>',
       "<div><h3>" + esc(d.destino || "Sin destino") + "</h3>",
       "<p>" + esc(estadia(d.noches)) + "</p>",
       "<p>" + esc(precioTexto(d)) + "</p>",
@@ -598,12 +607,17 @@
     vistaVideo.hidden = !activo || !urlMedio(link, true);
     if (vistaVideo.hidden) { vistaVideo.pause(); vistaVideo.removeAttribute("src"); }
     else if (vistaVideo.getAttribute("src") !== link) vistaVideo.src = link;
+    if (vistaVideo.hidden || window.matchMedia("(prefers-reduced-motion: reduce)").matches) vistaVideo.pause();
+    else {
+      var play = vistaVideo.play();
+      if (play && play.catch) play.catch(function () {});
+    }
     form.querySelector("[data-video-marco]").hidden = vistaVideo.hidden;
     form.querySelector("[data-overlay-aviso]").hidden = !activo;
     var capa = form.querySelector("[data-video-overlay]");
     var rutaCapa = editando && publicado.ofertas[editando] && publicado.ofertas[editando].overlay;
     capa.hidden = !rutaCapa || vistaVideo.hidden;
-    if (rutaCapa) capa.src = "../" + rutaCapa; else capa.removeAttribute("src");
+    if (rutaCapa) capa.src = "../" + rutaCapa; else capa.src = FOTO_VACIA;
     fotoVista.hidden = !vistaVideo.hidden || !(fotoNueva || fotoOriginal);
     vistaOferta.querySelector(".jg-vista-foto > span").hidden = !vistaVideo.hidden || !!(fotoNueva || fotoOriginal);
     var poster = fotoNueva ? fotoNueva.vista : fotoOriginal;
@@ -639,9 +653,8 @@
 
   function actualizarFotoVista() {
     var src = fotoNueva ? fotoNueva.vista : fotoOriginal;
+    fotoVista.src = src || FOTO_VACIA;
     fotoVista.hidden = !src;
-    if (src) fotoVista.setAttribute("src", src);
-    else fotoVista.removeAttribute("src");
     actualizarVideoVista();
   }
 
@@ -664,8 +677,13 @@
     vistaOferta.querySelector("[data-vista-fechas]").textContent = [estadia(d.noches), d.fechas].filter(Boolean).join(" · ");
     var estrellas = vistaOferta.querySelector("[data-vista-estrellas]");
     estrellas.textContent = "★".repeat(d.estrellas);
-    if (d.estrellas) estrellas.setAttribute("aria-label", d.estrellas + " estrellas");
-    else estrellas.removeAttribute("aria-label");
+    if (d.estrellas) {
+      estrellas.setAttribute("role", "img");
+      estrellas.setAttribute("aria-label", d.estrellas + " estrellas");
+    } else {
+      estrellas.removeAttribute("role");
+      estrellas.removeAttribute("aria-label");
+    }
 
     var precio = vistaOferta.querySelector("[data-vista-precio]");
     precio.textContent = d.precio ? precioTexto(d) : "";
@@ -776,13 +794,12 @@
     pieza.querySelectorAll("[data-pieza]").forEach(function (img) {
       var ruta = pub && pub[img.dataset.pieza];
       img.parentElement.hidden = !ruta;
-      if (ruta) img.setAttribute("src", "../" + ruta);
-      else img.removeAttribute("src");
+      img.setAttribute("src", ruta ? "../" + ruta : FOTO_VACIA);
     });
     pieza.querySelector("[data-bajar]").innerHTML = pub ? descargas(pub, o.id) : "";
     textoNoches();
     say(avisoForm, "");
-    form.scrollIntoView({ behavior: "smooth", block: "start" });
+    mover(form, "start");
     form.destino.focus({ preventScroll: true });
   }
 
@@ -1067,7 +1084,7 @@
     art.className = "jv-item";
     art.setAttribute("data-id", s.id);
     var medio = s.foto
-      ? '<img src="' + esc(urlFotoPortada(s)) + '" alt="" loading="lazy">'
+      ? '<img src="' + esc(urlFotoPortada(s)) + '" alt="" loading="lazy" decoding="async">'
       : s.video
         ? '<video src="' + esc(s.video) + '#t=2" muted playsinline preload="metadata" aria-hidden="true"></video>'
         : '<span class="jg-sin-foto" aria-hidden="true"><i class="bi bi-image"></i></span>';
@@ -1123,7 +1140,7 @@
     var foto = fotoPortada ? fotoPortada.vista : s && s.foto && !formPortada.quitar_foto.checked ? urlFotoPortada(s) : "";
     var link = formPortada.video.value.trim();
     img.hidden = !foto;
-    if (foto) img.src = foto; else img.removeAttribute("src");
+    img.src = foto || FOTO_VACIA;
     video.hidden = !!foto || !/^https:\/\//.test(link);
     if (!video.hidden && video.getAttribute("src") !== link + "#t=2") video.src = link + "#t=2";
   }
@@ -1147,7 +1164,7 @@
     formPortada.querySelector("[data-quitar-foto]").hidden = !(s && s.foto);
     vistaMedio(s);
     say(avisoPortada, "");
-    formPortada.scrollIntoView({ behavior: "smooth", block: "start" });
+    mover(formPortada, "start");
     formPortada.titulo.focus({ preventScroll: true });
   }
 
@@ -1365,9 +1382,15 @@
 
   /* Pestañas */
 
+  function pestañas() {
+    return Array.prototype.slice.call(document.querySelectorAll("[data-tab]"));
+  }
+
   function mostrarPestaña(nombre) {
-    document.querySelectorAll("[data-tab]").forEach(function (tab) {
-      tab.setAttribute("aria-selected", String(tab.getAttribute("data-tab") === nombre));
+    pestañas().forEach(function (tab) {
+      var activa = tab.getAttribute("data-tab") === nombre;
+      tab.setAttribute("aria-selected", String(activa));
+      tab.tabIndex = activa ? 0 : -1;
     });
     document.querySelectorAll("[data-panel]").forEach(function (panel) {
       panel.hidden = panel.getAttribute("data-panel") !== nombre;
@@ -1375,8 +1398,21 @@
     if (history.replaceState) history.replaceState(null, "", nombre === "ofertas" ? location.pathname : "#" + nombre);
   }
 
-  document.querySelectorAll("[data-tab]").forEach(function (tab) {
+  pestañas().forEach(function (tab) {
     tab.addEventListener("click", function () { mostrarPestaña(tab.getAttribute("data-tab")); });
+    tab.addEventListener("keydown", function (e) {
+      var lista = pestañas();
+      var i = lista.indexOf(tab);
+      var siguiente = null;
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") siguiente = lista[(i + 1) % lista.length];
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") siguiente = lista[(i - 1 + lista.length) % lista.length];
+      else if (e.key === "Home") siguiente = lista[0];
+      else if (e.key === "End") siguiente = lista[lista.length - 1];
+      if (!siguiente) return;
+      e.preventDefault();
+      mostrarPestaña(siguiente.getAttribute("data-tab"));
+      siguiente.focus();
+    });
   });
   if (location.hash === "#portada" || location.hash === "#contacto") mostrarPestaña(location.hash.slice(1));
 

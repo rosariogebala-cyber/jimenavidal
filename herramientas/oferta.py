@@ -928,13 +928,13 @@ def note_band(html):
         '<div><h2>%s</h2>'
         '<p>Contanos qué necesitás y te respondemos {{c.respuesta}}.</p></div>'
         '<div class="jv-cierre-side">'
-        '<p class="jv-cierre-hint">Escribinos por WhatsApp o dejanos tu&nbsp;email.</p>'
-        '<a class="jv-wa" href="%s" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp"><i class="bi bi-whatsapp"></i></a>'
+        '<p class="jv-cierre-hint" id="jv-email-hint">Escribinos por WhatsApp o dejanos tu&nbsp;email.</p>'
+        '<a class="jv-wa" href="%s" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp"><i class="bi bi-whatsapp" aria-hidden="true"></i></a>'
         '<form data-demo-form>'
         '<label class="visually-hidden" for="jv-email">Tu email</label>'
         '<div class="foot-form">'
-        '<input id="jv-email" type="email" name="email" placeholder="Tu email" autocomplete="email" required>'
-        '<input type="text" name="web" tabindex="-1" autocomplete="off" aria-hidden="true" hidden>'
+        '<input id="jv-email" type="email" name="email" placeholder="Tu email" autocomplete="email" required aria-describedby="jv-email-hint">'
+        '<input type="text" name="web" tabindex="-1" autocomplete="off" hidden>'
         '<button class="btn-nx-light" type="submit">Enviar</button>'
         '</div>'
         '<p class="foot-form-note" data-form-msg aria-live="polite"></p>'
@@ -988,7 +988,7 @@ def filter_tags(offer):
     return " ".join(tags)
 
 
-def promo_card(oid, src, alt, meta_html, title, price_html, includes_html, detail, href, featured=False, filtros="", desde="", hasta="", video="", overlay=""):
+def promo_card(oid, src, alt, meta_html, title, price_html, includes_html, detail, href, reserva="", featured=False, filtros="", desde="", hasta="", video="", overlay=""):
     """Entran de a cuatro. Las destacadas llevan jv-destacada y la landing las sube sobre el hero."""
     meta = '<p class="meta">%s</p>' % meta_html if meta_html else ""
     sale = '<p class="prod-sale">%s</p>' % nb_html(detail) if detail else ""
@@ -996,22 +996,25 @@ def promo_card(oid, src, alt, meta_html, title, price_html, includes_html, detai
     fechas = "".join(' data-%s="%s"' % (k, escape(v, quote=True)) for k, v in (("desde", desde), ("hasta", hasta)) if v)
     media = (
         '<div class="nx-frame ratio-1" style="position:relative;overflow:hidden">'
-        '<video autoplay muted loop playsinline preload="metadata" poster="%s" src="%s" aria-label="%s" style="display:block;width:100%%;height:100%%;object-fit:cover"></video>'
-        '<img src="%s" alt="%s" style="position:absolute;inset:0;width:100%%;height:100%%;pointer-events:none">'
+        '<video autoplay muted loop playsinline preload="metadata" poster="%s" src="%s" aria-label="%s" width="1200" height="1200" style="display:block;width:100%%;height:100%%;object-fit:cover"></video>'
+        '<img src="%s" alt="%s" width="1200" height="1200" decoding="async" style="position:absolute;inset:0;width:100%%;height:100%%;pointer-events:none">'
         '</div>'
         % (escape(src, quote=True), escape(video, quote=True), escape(title, quote=True), escape(overlay, quote=True), escape(alt, quote=True))
         if video and overlay else
-        '<div class="nx-frame ratio-1"><button type="button" class="jv-zoom" data-zoom="%s" aria-label="%s"><img src="%s" alt="%s"></button></div>'
+        '<div class="nx-frame ratio-1"><button type="button" class="jv-zoom" data-zoom="%s" aria-label="%s"><img src="%s" alt="%s" width="1200" height="1200" loading="lazy" decoding="async"></button></div>'
         % (escape(src, quote=True), escape("Ver " + title, quote=True), escape(src, quote=True), escape(alt, quote=True))
     )
     return (
         '<div class="%s"><article class="prod-card prod-card-xl" data-oferta="%s" data-filtros="%s"%s>'
         '%s<div class="pad"><h3>%s</h3>%s%s%s%s'
+        '<div class="prod-cta">'
         '<a class="prod-more" href="%s" target="_blank" rel="noopener">Escribinos <i class="bi bi-whatsapp"></i></a>'
-        "</div></article></div>"
+        '<a class="btn-nx btn-sm" href="%s" target="_blank" rel="noopener">Reservar <i class="bi bi-whatsapp" aria-hidden="true"></i></a>'
+        "</div></div></article></div>"
     ) % (
         col, escape(oid, quote=True), escape(filtros, quote=True), fechas, media,
-        nb_html(title), meta, price_html, includes_html, sale, escape(href, quote=True),
+        nb_html(title), meta, price_html, includes_html, sale,
+        escape(href, quote=True), escape(reserva or href, quote=True),
     )
 
 
@@ -1034,14 +1037,23 @@ def apply_offers(html, cards, note):
     return html[:match.start(2)] + inner + html[match.end(2):]
 
 
-def offer_href(html, destino, estadia, fechas="", precio=""):
+def _wa(html, text):
     match = re.search(r"https://wa\.me/(\d+)", html or "")
     phone = match.group(1) if match else "5493416953818"
+    return "https://wa.me/%s?text=%s" % (phone, quote(text))
+
+
+def offer_href(html, destino, estadia, fechas="", precio=""):
     detalle = ", ".join(part for part in (destino, estadia, fechas) if part)
     text = "Hola, quiero consultar la promo a %s" % detalle
     if precio:
         text += " (%s)" % precio
-    return "https://wa.me/%s?text=%s" % (phone, quote(text + "."))
+    return _wa(html, text + ".")
+
+
+def reserva_href(html, destino):
+    """WhatsApp de Reservar. El mensaje nombra solo el destino."""
+    return _wa(html, "Quiero reservar este viaje a %s." % (destino or "este destino"))
 
 
 def patch_promo(html, src, alt, meta, title, price, note):
@@ -1074,7 +1086,7 @@ def card_meta_html(offer):
     stars = offer.get("estrellas") or 0
     if stars in (3, 4, 5):
         icons = "".join('<i class="bi bi-star-fill"></i>' for _ in range(stars))
-        mark = '<span class="jv-stars" aria-label="%d estrellas">%s</span>' % (stars, icons)
+        mark = '<span class="jv-stars" role="img" aria-label="%d estrellas">%s</span>' % (stars, icons)
         html = (html + " " + mark).strip()
     return html
 

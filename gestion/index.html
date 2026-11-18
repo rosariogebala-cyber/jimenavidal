@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Gestión interna de Jimena Vidal Viajes para cargar ofertas, portada y contacto. No es una página pública.">
+<link rel="canonical" href="https://rosariogebala-cyber.github.io/jimenavidal/gestion/">
 <title>Gestión del sitio · Jimena Vidal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,12 +14,13 @@
 <link href="gestion.css" rel="stylesheet">
 </head>
 <body>
+<a class="jg-skip" href="#gestion">Saltar al&nbsp;contenido</a>
 <header class="jg-head">
   <a class="jg-marca" href="../">Jimena Vidal</a>
   <a class="jg-ver" href="../" target="_blank" rel="noopener">Ver el sitio <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
 </header>
 
-<main class="jv-gestor">
+<main class="jv-gestor" id="gestion" tabindex="-1">
   <p class="jg-kicker">Equipo</p>
   <h1>Gestión del&nbsp;sitio</h1>
   <p class="jv-lead">Ofertas, portada y contacto. Cada cambio se publica en el sitio en uno o dos&nbsp;minutos.</p>
@@ -42,9 +45,9 @@
   <div class="jv-app" hidden>
     <div class="jv-top">
       <div class="jg-tabs" role="tablist" aria-label="Secciones">
-        <button type="button" role="tab" id="tab-ofertas" aria-controls="panel-ofertas" aria-selected="true" data-tab="ofertas">Ofertas</button>
-        <button type="button" role="tab" id="tab-portada" aria-controls="panel-portada" aria-selected="false" data-tab="portada">Portada</button>
-        <button type="button" role="tab" id="tab-contacto" aria-controls="panel-contacto" aria-selected="false" data-tab="contacto">Contacto</button>
+        <button type="button" role="tab" id="tab-ofertas" aria-controls="panel-ofertas" aria-selected="true" tabindex="0" data-tab="ofertas">Ofertas</button>
+        <button type="button" role="tab" id="tab-portada" aria-controls="panel-portada" aria-selected="false" tabindex="-1" data-tab="portada">Portada</button>
+        <button type="button" role="tab" id="tab-contacto" aria-controls="panel-contacto" aria-selected="false" tabindex="-1" data-tab="contacto">Contacto</button>
       </div>
       <button type="button" data-recargar>Actualizar</button>
       <button type="button" data-salir>Salir</button>
@@ -59,9 +62,9 @@
       <details class="jg-ayuda" data-importar-texto>
         <summary>Completar desde un texto del proveedor</summary>
         <p class="jv-hint">Pegá el texto y revisá la propuesta. La foto y las fechas de publicación se cargan aparte. Esta primera versión reconoce formatos habituales; los datos ambiguos se completan a mano.</p>
-        <label>Texto de la oferta<textarea data-texto-proveedor rows="7" maxlength="12000" style="width:100%" placeholder="Punta Cana · 7 noches&#10;Salida desde Ezeiza el 15 de enero&#10;Hotel Barceló Bávaro 5★ · All inclusive&#10;Aéreo y traslados incluidos&#10;USD 1.850 por persona, base doble"></textarea></label>
+        <label>Texto de la oferta<textarea data-texto-proveedor rows="7" maxlength="12000" placeholder="Punta Cana · 7 noches&#10;Salida desde Ezeiza el 15 de enero&#10;Hotel Barceló Bávaro 5★ · All inclusive&#10;Aéreo y traslados incluidos&#10;USD 1.850 por persona, base doble"></textarea></label>
         <button type="button" data-analizar-texto>Preparar propuesta</button>
-        <div data-propuesta-texto role="status" style="white-space:pre-line"></div>
+        <div class="jg-propuesta" data-propuesta-texto role="status"></div>
         <button type="button" data-aplicar-texto hidden>Usar estos datos en el formulario</button>
       </details>
       <div class="jg-editor">
@@ -84,7 +87,8 @@
       <p class="jv-hint" data-stay>7 noches se publican como 8 días / 7&nbsp;noches.</p>
       <label>Fechas<input name="fechas" maxlength="28" placeholder="12 jun – 19 jun, o salidas en junio"></label>
       <p class="jv-hint">Sale en la pieza, bajo el&nbsp;origen.</p>
-      <span class="jg-label">Qué incluye</span>
+      <fieldset class="jg-grupo">
+      <legend class="jg-label">Qué incluye</legend>
       <p class="jv-hint">Solo entra lo que tenga&nbsp;tilde.</p>
       <div class="jv-checks">
         <label><input type="checkbox" name="incluye" value="aereo" data-icono="airplane"> Vuelo</label>
@@ -96,6 +100,7 @@
         <label><input type="checkbox" name="incluye" value="desayuno" data-icono="cup-hot"> Desayuno</label>
         <label><input type="checkbox" name="incluye" value="asistencia" data-icono="plus-lg"> Asistencia</label>
       </div>
+      </fieldset>
       <div class="jv-row">
         <label>Vuelo<select name="vuelo"><option value="">Sin aclarar</option><option value="directo">Directo</option><option value="con escala">Con escala</option></select></label>
         <label>Comidas<select name="regimen"><option value="">Sin régimen</option><option>Desayuno</option><option>Media pensión</option><option>All inclusive</option></select></label>
@@ -132,18 +137,18 @@
         <p class="jv-hint">Se actualiza a medida que editás. Guardá como pendiente para generar y revisar las piezas finales antes de&nbsp;publicar.</p>
         <article class="jg-vista-ficha" data-vista-oferta>
           <div class="jg-vista-foto">
-            <img alt="" hidden>
+            <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" width="1200" height="1200" hidden>
 
             <span><i class="bi bi-image" aria-hidden="true"></i> Foto del destino</span>
           </div>
-          <h4 data-vista-destino></h4>
+          <h4 data-vista-destino>Nombre del destino</h4>
           <p class="jg-vista-meta"><span data-vista-fechas></span> <span data-vista-estrellas></span></p>
           <p class="jg-vista-precio" data-vista-precio hidden></p>
           <p class="jg-vista-incluye" data-vista-incluye hidden></p>
           <p class="jg-vista-detalle" data-vista-detalle hidden></p>
-          <div data-video-marco hidden style="position:relative;aspect-ratio:1;overflow:hidden;border-radius:12px;margin:12px 0">
-            <video data-vista-video autoplay muted loop playsinline preload="metadata" hidden style="display:block;width:100%;height:100%;object-fit:cover"></video>
-            <img data-video-overlay hidden alt="Texto de la última pieza generada" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">
+          <div class="jg-vista-marco" data-video-marco hidden>
+            <video data-vista-video muted loop playsinline preload="metadata" hidden></video>
+            <img data-video-overlay src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="1200" height="1200" hidden alt="Texto de la última pieza generada">
           </div>
           <p class="jv-hint" data-overlay-aviso hidden>El texto superpuesto se genera al guardar. La vista previa usa la última pieza generada, si existe.</p>
           <span class="jg-vista-cta">Escribinos <i class="bi bi-whatsapp" aria-hidden="true"></i></span>
@@ -154,9 +159,9 @@
         <summary>Ver las últimas piezas generadas</summary>
         <p class="jv-hint">Corresponden a la última versión procesada. Los cambios del formulario se reflejan después de&nbsp;guardar.</p>
         <div class="jg-piezas">
-          <figure><img data-pieza="card" alt="" loading="lazy"><figcaption>Ficha web</figcaption></figure>
-          <figure><img data-pieza="post" alt="" loading="lazy"><figcaption>Post</figcaption></figure>
-          <figure><img data-pieza="reel" alt="" loading="lazy"><figcaption>Reel</figcaption></figure>
+          <figure><img data-pieza="card" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" width="1200" height="1200" loading="lazy" decoding="async"><figcaption>Ficha web</figcaption></figure>
+          <figure><img data-pieza="post" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" width="1080" height="1350" loading="lazy" decoding="async"><figcaption>Post</figcaption></figure>
+          <figure><img data-pieza="reel" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" width="1080" height="1920" loading="lazy" decoding="async"><figcaption>Reel</figcaption></figure>
         </div>
         <div data-bajar></div>
       </details>
@@ -198,8 +203,8 @@
         <p class="jv-hint">Pegá el link del video (.mp4) de Pexels o Pixabay. Si cargás una foto, se usa la&nbsp;foto.</p>
         <label>Foto<input type="file" name="foto" accept="image/jpeg,image/png,image/webp"></label>
         <label class="jg-check" data-quitar-foto hidden><input type="checkbox" name="quitar_foto"> Quitar la foto y usar el&nbsp;video</label>
-        <img class="jv-preview" alt="" hidden aria-hidden="true">
-        <video class="jv-preview" muted playsinline preload="metadata" hidden aria-hidden="true"></video>
+        <img class="jv-preview" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" hidden>
+        <video class="jv-preview" muted playsinline preload="none" hidden></video>
         <div class="jv-row">
           <label>Lugar<input name="lugar" maxlength="24" placeholder="Roma"></label>
           <label>Qué se ve<input name="descripcion" maxlength="90" placeholder="Vista aérea del Coliseo al amanecer"></label>
@@ -287,7 +292,7 @@
   </div>
 </main>
 
-<script src="texto-oferta.js?v=1"></script>
-<script src="gestion.js"></script>
+<script src="texto-oferta.js?v=1" defer></script>
+<script src="gestion.js" defer></script>
 </body>
 </html>

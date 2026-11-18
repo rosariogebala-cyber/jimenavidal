@@ -9,6 +9,7 @@ Para verlo en la compu:
 """
 
 import hashlib
+import io
 import json
 import os
 import re
@@ -224,6 +225,7 @@ def piezas_de(sitio, ofertas, html):
             cards.append(piezas.promo_card(
                 item["id"], src, alt, piezas.card_meta_html(offer), offer["destino"],
                 piezas.price_html(offer), piezas.includes_html(offer), detail, href,
+                reserva=piezas.reserva_href(html, offer["destino"]),
                 featured=flags[item["id"]], filtros=piezas.filter_tags(offer),
                 desde=item.get("desde", ""), hasta=item.get("hasta", ""),
                 video=video_oferta(item.get("video", "")), overlay=overlay,
@@ -243,32 +245,74 @@ def sin_viuda(texto):
     return "&nbsp;".join(partes) if len(partes) == 2 else texto
 
 
+def foto_hero(nombre, data):
+    """Guarda la portada en JPEG y en WebP, con una copia angosta para el srcset."""
+    carpeta = os.path.join(SALIDA, "img", "hero")
+    escribir(os.path.join(carpeta, nombre), data)
+    imagen = piezas.Image.open(io.BytesIO(data))
+    if imagen.mode not in ("RGB", "RGBA"):
+        imagen = imagen.convert("RGB")
+    ancho, alto = imagen.size
+    base = os.path.splitext(nombre)[0]
+    versiones = []
+    for lado in (800, ancho):
+        if lado > ancho or (lado < ancho and ancho <= 800):
+            continue
+        copia = imagen
+        if lado < ancho:
+            copia = imagen.resize((lado, max(1, round(alto * lado / ancho))), piezas.Image.Resampling.LANCZOS)
+        buf = io.BytesIO()
+        copia.save(buf, "WEBP", quality=74, method=4)
+        marca = "%s.webp" % base if lado == ancho else "%s-800.webp" % base
+        escribir(os.path.join(carpeta, marca), buf.getvalue())
+        versiones.append((marca, copia.size[0]))
+    return ancho, alto, versiones
+
+
+def medio_hero(nombre, data, alt, primero):
+    ancho, alto, versiones = foto_hero(nombre, data)
+    src = "img/hero/%s?v=%s" % (nombre, huella(data))
+    carga = ' fetchpriority="high"' if primero else ' loading="lazy"'
+    img = '<img class="jv-hero-video" src="%s" alt="%s" width="%d" height="%d" decoding="async"%s>' % (
+        src, alt, ancho, alto, carga)
+    if not versiones:
+        return img, ""
+    srcset = ", ".join("img/hero/%s %dw" % par for par in versiones)
+    picture = '<picture><source type="image/webp" srcset="%s" sizes="100vw">%s</picture>' % (srcset, img)
+    preload = ""
+    if primero:
+        preload = '<link rel="preload" as="image" type="image/webp" imagesrcset="%s" imagesizes="100vw" fetchpriority="high">' % srcset
+    return picture, preload
+
+
 def portada(html):
     """Arma el carrusel del hero con datos/hero.json. Sin ese archivo deja el de la landing."""
     ruta = os.path.join(DATOS, "hero.json")
     if not os.path.exists(ruta):
-        return html
+        return html, ""
     with open(ruta, encoding="utf-8") as f:
         slides = [s for s in json.load(f).get("slides", []) if not s.get("archivada") and (s.get("video") or s.get("foto"))]
     if not slides or not HERO_RE.search(html):
-        return html
+        return html, ""
     telefono = (re.search(r"wa\.me/(\d+)", html) or [None, ""])[1]
     puntos, items = [], []
+    preload = ""
     for i, s in enumerate(slides):
         activo = i == 0
         etiqueta = escape(s.get("etiqueta") or s.get("lugar") or "Portada %d" % (i + 1))
         puntos.append(
             '<button type="button" data-bs-target="#heroJimena" data-bs-slide-to="%d" class="%s"%s aria-label="%s"></button>'
             % (i, "active" if activo else "", ' aria-current="true"' if activo else "", etiqueta))
-        descripcion = escape(s.get("descripcion") or "")
+        alt = escape(s.get("descripcion") or s.get("titulo") or etiqueta)
         if s.get("foto") and os.path.exists(os.path.join(DATOS, "hero", s["foto"])):
             with open(os.path.join(DATOS, "hero", s["foto"]), "rb") as f:
                 data = f.read()
-            escribir(os.path.join(SALIDA, "img", "hero", s["foto"]), data)
-            medio = '<img class="jv-hero-video" src="img/hero/%s?v=%s" alt="%s">' % (s["foto"], huella(data), descripcion)
+            medio, precarga = medio_hero(s["foto"], data, alt, activo)
+            if precarga:
+                preload = precarga
         else:
-            medio = '<video class="jv-hero-video" muted playsinline loop preload="none" src="%s" aria-label="%s"></video>' % (
-                escape(s["video"]), descripcion)
+            medio = '<video class="jv-hero-video" muted playsinline loop preload="none" width="1280" height="720" src="%s" aria-label="%s"></video>' % (
+                escape(s["video"]), alt)
         lugar = '<p class="jv-hero-lugar" aria-hidden="true">%s</p>' % sin_viuda(s["lugar"]) if s.get("lugar") else ""
         if s.get("destacado"):
             titulo = '%s <span class="em">%s</span>' % (escape(s.get("titulo") or ""), sin_viuda(s["destacado"]))
@@ -276,7 +320,7 @@ def portada(html):
             titulo = sin_viuda(s.get("titulo"))
         bajada = '<p class="nx-lead">%s</p>' % sin_viuda(s["bajada"]) if s.get("bajada") else ""
         pills = "".join(
-            '<span class="nx-pill"><i class="bi %s"></i> %s</span>' % (escape(p.get("icono") or "bi-check2-circle"), escape(p["texto"]))
+            '<span class="nx-pill"><i class="bi %s" aria-hidden="true"></i> %s</span>' % (escape(p.get("icono") or "bi-check2-circle"), escape(p["texto"]))
             for p in s.get("etiquetas") or [] if p.get("texto"))
         boton = ""
         if s.get("boton") and telefono:
@@ -285,14 +329,14 @@ def portada(html):
                 escape(href), escape(s["boton"]))
         secundario = '<a class="btn-nx-outline" href="#productos">Ver promociones</a>' if activo else ""
         acciones = '<div class="d-flex flex-wrap gap-2 mt-4">%s%s</div>' % (boton, secundario) if boton or secundario else ""
-        encabezado = "h2"
+        encabezado = "h1" if activo else "h2"
         items.append(
             '<div class="carousel-item%s%s"><div class="nx-hero-slide">%s%s<div class="container"><div class="col-lg-7">'
             '<%s class="nx-display">%s</%s>%s%s%s</div></div></div></div>' % (
                 " jv-quince" if s.get("estilo") == "grande" else "", " active" if activo else "",
                 medio, lugar, encabezado, titulo, encabezado, bajada, '<div class="nx-pills">%s</div>' % pills if pills else "", acciones))
     cuerpo = '<div class="carousel-indicators">%s</div><div class="carousel-inner">%s</div>' % ("".join(puntos), "".join(items))
-    return HERO_RE.sub(lambda m: m.group(1) + cuerpo + m.group(3), html, count=1)
+    return HERO_RE.sub(lambda m: m.group(1) + cuerpo + m.group(3), html, count=1), preload
 
 
 def solo_digitos(texto):
@@ -341,6 +385,9 @@ def cabecera(sitio):
         ("property", "og:image", imagen),
         ("property", "og:image:alt", sitio["titulo"] if imagen else ""),
         ("name", "twitter:card", "summary_large_image" if imagen else "summary"),
+        ("name", "twitter:title", sitio["titulo"]),
+        ("name", "twitter:description", sitio["descripcion"]),
+        ("name", "twitter:image", imagen),
     ]
     out = "".join('<meta %s="%s" content="%s">' % (a, k, escape(v)) for a, k, v in tags if v)
     return out + '<link rel="canonical" href="%s">' % escape(BASE_URL)
@@ -350,12 +397,54 @@ MAILTO = """<script>
 document.querySelectorAll("[data-mailto-form]").forEach(function (form) {
   form.addEventListener("submit", function (e) {
     e.preventDefault();
+    var trampa = form.querySelector('[name="web"]');
+    if (trampa && trampa.value) return;
     var email = form.querySelector('input[type="email"]');
+    var aviso = form.querySelector("[data-form-msg]");
     var cuerpo = "Hola, quiero que me escriban a " + (email ? email.value : "") + ".";
+    if (aviso) aviso.textContent = "Se abre tu correo para enviar la consulta.";
     location.href = "mailto:{{c.email}}?subject=" + encodeURIComponent("Consulta desde la web") + "&body=" + encodeURIComponent(cuerpo);
   });
 });
 </script>"""
+
+
+def schema_agencia(contacto):
+    """TravelAgency con los datos reales del local. Sin Product: las promos del gestor cambian y no son un catálogo estable."""
+    direccion = " ".join((contacto.get("direccion") or "").split())
+    localidad = " ".join((contacto.get("localidad") or "").split())
+    ciudad, _, region = localidad.partition(",")
+    redes = [contacto.get("instagram") or "", contacto.get("facebook") or ""]
+    datos = {
+        "@context": "https://schema.org",
+        "@type": "TravelAgency",
+        "name": "Jimena Vidal",
+        "description": "Diseñadoras de viajes en Funes. Pasajes, paquetes y contacto por WhatsApp.",
+        "url": BASE_URL,
+        "image": BASE_URL + "assets/img/compartir.jpg",
+        "telephone": contacto.get("telefono") or "",
+        "email": contacto.get("email") or "",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": direccion,
+            "addressLocality": ciudad.strip(),
+            "addressRegion": region.strip(),
+            "addressCountry": "AR",
+        },
+        "identifier": contacto.get("legajo") or "",
+        "areaServed": ["Funes", "Rosario"],
+        "sameAs": [url for url in redes if url],
+    }
+    return '<script type="application/ld+json">%s</script>' % json.dumps(datos, ensure_ascii=False)
+
+
+def iconos_decorativos(html):
+    def marca(match):
+        tag = match.group(0)
+        if "aria-hidden" in tag:
+            return tag
+        return tag[:-1] + ' aria-hidden="true">'
+    return re.sub(r'<i class="bi [^"]*">', marca, html)
 
 
 def armar():
@@ -372,17 +461,18 @@ def armar():
         shutil.rmtree(SALIDA)
     os.makedirs(SALIDA)
 
-    html = portada(html)
+    html, preload = portada(html)
     cards, estado = piezas_de(sitio, ofertas, html)
     html = piezas.apply_offers(html, cards, piezas.PUBLIC_NOTE)
     if html is None:
         sys.exit("La landing no tiene sección de promociones.")
 
-    html = html.replace("</head>", cabecera(sitio) + "</head>", 1)
+    html = html.replace("</head>", preload + cabecera(sitio) + schema_agencia(contacto) + "</head>", 1)
     html = html.replace("data-demo-form", "data-mailto-form")
-    html = html.replace("</body>", '<script src="/assets/js/ofertas.js"></script>%s</body>' % MAILTO, 1)
+    html = html.replace("</body>", '<script src="/assets/js/ofertas.js" defer></script>%s</body>' % MAILTO, 1)
     html = con_contacto(html, valores)
     html = re.sub(r'<a [^>]*href=""[^>]*>.*?</a>', "", html)
+    html = iconos_decorativos(html)
     if "{{c." in html:
         sys.exit("Quedó un dato de contacto sin completar en la landing.")
 
@@ -414,6 +504,14 @@ def armar():
     with open(os.path.join(SALIDA, "index.html"), "w", encoding="utf-8") as f:
         f.write(html)
     open(os.path.join(SALIDA, ".nojekyll"), "w").close()
+    with open(os.path.join(SALIDA, "robots.txt"), "w", encoding="utf-8") as f:
+        f.write("User-agent: *\nAllow: /\nDisallow: %sgestion/\n\nSitemap: %ssitemap.xml\n" % (urlsplit(BASE_URL).path, BASE_URL))
+    with open(os.path.join(SALIDA, "sitemap.xml"), "w", encoding="utf-8") as f:
+        f.write(
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            "  <url><loc>%s</loc></url>\n</urlset>\n" % BASE_URL
+        )
     salteadas = [k for k, v in estado.items() if "error" in v]
     print("Listo: %d promos publicadas en _site%s" % (
         len(cards), " (%d sin armar)" % len(salteadas) if salteadas else ""))

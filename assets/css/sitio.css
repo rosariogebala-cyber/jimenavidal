@@ -586,6 +586,18 @@ button, input { font-family: inherit; }
 }
 .prod-more:hover { color: var(--green); }
 
+.prod-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  margin-top: auto;
+  padding-top: 14px;
+}
+
+.prod-cta .prod-more { margin-top: 0; align-self: center; }
+.prod-cta .btn-nx { white-space: nowrap; }
+
 .nx-nav-fluid { padding-inline: clamp(16px, 3.2vw, 56px); }
 
 /* Gallery / scroll */
@@ -677,6 +689,7 @@ button, input { font-family: inherit; }
   border-radius: 50%;
   object-fit: cover;
 }
+.quote-card h3 { margin: 0; font: inherit; font-weight: 700; }
 .nx-stars { color: #8faf9a; letter-spacing: 2px; font-size: 14px; }
 .nx-stars.is-google { color: var(--gold); }
 .g-mark {
