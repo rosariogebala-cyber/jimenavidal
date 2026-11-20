@@ -1,0 +1,101 @@
+name: QA landing Jimena Vidal
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [qa/auditoria-integral-2026-11]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verificar:
+    name: Build y validaciones del sitio publicado
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: herramientas/requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar dependencias de la publicación
+        run: pip install -r herramientas/requirements.txt
+      - name: Sintaxis JavaScript
+        run: |
+          node --check assets/js/sitio.js
+          node --check assets/js/ofertas.js
+      - name: Construir exactamente como GitHub Pages
+        run: python herramientas/armar.py
+      - name: Verificar HTML, enlaces, SEO y recursos
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+  browser:
+    name: Chromium, WCAG y capturas responsive
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: pip install -r herramientas/requirements.txt
+      - run: python herramientas/armar.py
+      - run: npm install --no-save --no-package-lock playwright @axe-core/playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node --test tests/browser.test.mjs
+      - name: Guardar capturas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-jimena-responsive
+          path: qa-screenshots/*.png
+          if-no-files-found: warn
+  lighthouse:
+    name: Lighthouse Mobile y Desktop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: pip install -r herramientas/requirements.txt
+      - run: python herramientas/armar.py
+      - run: npm install --no-save --no-package-lock lighthouse
+      - name: Servidor local
+        run: |
+          python3 -m http.server 8890 -d _site --bind 127.0.0.1 > /tmp/jimena-server.log 2>&1 &
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8890/ -o /dev/null; then break; fi
+            sleep 1
+          done
+      - name: Medición móvil
+        run: npx lighthouse http://127.0.0.1:8890/ --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output=html --output-path=./lighthouse-mobile --quiet
+      - name: Medición escritorio
+        run: npx lighthouse http://127.0.0.1:8890/ --preset=desktop --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output=html --output-path=./lighthouse-desktop --quiet
+      - name: Resumen de métricas Lighthouse
+        run: |
+          python3 - <<'PY'
+          import json
+          for device in ('mobile', 'desktop'):
+              with open('lighthouse-%s.report.json' % device) as f:
+                  data = json.load(f)
+              scores = {key: round(data['categories'][key]['score'] * 100) for key in ('performance', 'accessibility', 'best-practices', 'seo')}
+              metrics = {key: round(data['audits'][key]['numericValue']) for key in ('largest-contentful-paint', 'first-contentful-paint', 'total-blocking-time')}
+              print(device.upper(), 'scores:', scores, 'times_ms:', metrics)
+          PY
+      - name: Guardar informes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-jimena
+          path: |
+            lighthouse-*.json
+            lighthouse-*.html
+          if-no-files-found: warn

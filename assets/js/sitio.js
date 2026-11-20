@@ -24,7 +24,7 @@
     topics.forEach(function (btn) {
       btn.addEventListener("click", function () {
         topic = btn.getAttribute("data-topic");
-        topics.forEach(function (b) { b.classList.toggle("is-on", b === btn); });
+        topics.forEach(function (b) { var active = b === btn; b.classList.toggle("is-on", active); b.setAttribute("aria-pressed", String(active)); });
         if (input) input.value = "";
         apply();
       });

@@ -1049,7 +1049,7 @@ body:not(.lib-page) .mq-block[data-width="contained"] > .mq-frame { margin-inlin
 
 @media (max-width: 767.98px) {
   .nx-hero .carousel-control-prev,
-  .nx-hero .carousel-control-next { top: auto; bottom: 14px; transform: none; }
+  .nx-hero .carousel-control-next { top: auto; bottom: 44px; transform: none; }
   .nx-hero .nx-hero-slide::before {
     background: linear-gradient(180deg, rgba(247, 244, 239, 0.94) 0%, rgba(247, 244, 239, 0.82) 36%, rgba(247, 244, 239, 0.3) 60%, rgba(247, 244, 239, 0) 80%);
   }
@@ -1201,3 +1201,6 @@ html:has(> .landing-page) { scroll-behavior: smooth; }
 .jv-skip { position: fixed; inset: 12px auto auto 12px; z-index: 1100; padding: 12px 16px; color: #121212; background: #fff; }
 .jv-skip:not(:focus) { clip-path: inset(50%); }
 #contenido-principal { scroll-margin-top: var(--nx-nav-h, 0px); }
+
+/* QA móvil: evitar que el email largo del footer exceda su columna a 320–375px. */
+#footer a[href^="mailto:"] { overflow-wrap: anywhere; word-break: break-word; }

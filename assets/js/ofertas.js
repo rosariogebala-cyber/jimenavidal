@@ -18,7 +18,7 @@
     "#productos .jv-incs{display:flex;flex-wrap:wrap;gap:6px 12px;margin:0 0 10px;font-size:.86rem}",
     "#productos .jv-inc{display:inline-flex;align-items:center;gap:.3em}",
     "#productos .jv-inc i{color:#e4570a}",
-    "#productos .prod-price s{opacity:.72;margin-right:.4em;font-weight:600;text-decoration:line-through}",
+    "#productos .prod-price s{opacity:1;color:#6a3f2a;margin-right:.4em;font-weight:600;text-decoration:line-through}",
     "#productos .prod-sale{margin:0 0 10px;font-size:.95rem}",
     "#productos .jv-cierre{width:100vw;margin:56px 0 0 calc(50% - 50vw);background:radial-gradient(62% 130% at 90% 0%,rgba(255,186,120,.55) 0%,transparent 58%),radial-gradient(48% 120% at 0% 100%,rgba(255,120,40,.42) 0%,transparent 60%),linear-gradient(115deg,#4a1608 0%,#b8430c 55%,#e4570a 100%)}",
     "#productos .nx-pad{padding-bottom:0}",
@@ -78,7 +78,7 @@
     "#preguntas-frecuentes .accordion-body{padding:0 0 22px;max-width:56ch;color:#3d4c60}",
     "#preguntas-frecuentes .jv-faq-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 20px;margin-top:36px;padding:18px 18px 18px 24px;background:#fff;border-radius:999px;box-shadow:0 1px 2px rgba(11,31,56,.06),0 8px 24px rgba(11,31,56,.08)}",
     "#preguntas-frecuentes .jv-faq-cta h3{margin:0;font-family:Fraunces,Georgia,serif;font-weight:500;font-size:1.25rem;color:#0b1f38}",
-    "#preguntas-frecuentes .jv-faq-cta a{display:inline-flex;align-items:center;gap:.5em;padding:12px 22px;border-radius:999px;background:#e4570a;color:#fff;font-weight:600;text-decoration:none;transition:background .2s ease}",
+    "#preguntas-frecuentes .jv-faq-cta a{display:inline-flex;align-items:center;gap:.5em;padding:12px 22px;border-radius:999px;background:#b43d06;color:#fff;font-weight:600;text-decoration:none;transition:background .2s ease}",
     "#preguntas-frecuentes .jv-faq-cta a:hover,#preguntas-frecuentes .jv-faq-cta a:focus-visible{background:#c94a06;color:#fff}",
     "#preguntas-frecuentes .jv-faq-cta a i{transition:transform .2s ease}",
     "#preguntas-frecuentes .jv-faq-cta a:hover i{transform:translateX(3px)}",
@@ -95,6 +95,7 @@
     "#preguntas-frecuentes .jv-bags span{display:block;margin-top:4px;color:#e4570a;font-weight:700}",
     "#preguntas-frecuentes .jv-bags-note{margin:12px 0 0;font-size:.92rem}",
     "@media(min-width:992px){#preguntas-frecuentes .jv-bags{grid-template-columns:repeat(3,1fr)}#preguntas-frecuentes .jv-bags figure{grid-template-columns:1fr;align-items:start}}",
+    "#hero .carousel-indicators [data-bs-target]{height:4px;margin-left:8px;margin-right:8px}",
     "#hero .nx-hero-slide{overflow:hidden}",
     "#hero .nx-hero-slide::before{z-index:1}",
     "#hero .jv-quince .nx-hero-slide{background:#0b1f38}",
@@ -140,11 +141,28 @@
       window.bootstrap.Carousel.getOrCreateInstance(heroCarrusel, { interval: false, ride: false, touch: true }).pause();
     }
   }
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    document.querySelectorAll("#productos video").forEach(function (video) {
-      video.removeAttribute("autoplay");
-      video.pause();
-    });
+  // Los videos de promociones son decorativos y pueden pesar varios MB.
+  // Descargar y reproducir solo cuando se ven. No modificar el JSON ni el panel.
+  var promoVideos = [].slice.call(document.querySelectorAll("#productos video[data-src]"));
+  var quietoPromos = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function activarVideoPromo(video) {
+    if (!video.src && video.dataset.src) {
+      video.src = video.dataset.src;
+      video.load();
+    }
+    var intento = video.play();
+    if (intento && intento.catch) intento.catch(function () {});
+  }
+  if (!quietoPromos && "IntersectionObserver" in window) {
+    var promoVideoObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) activarVideoPromo(entry.target);
+        else entry.target.pause();
+      });
+    }, { rootMargin: "50px 0px" });
+    promoVideos.forEach(function (video) { promoVideoObserver.observe(video); });
+  } else if (!quietoPromos) {
+    promoVideos.forEach(activarVideoPromo);
   }
 
   function subirDestacadas() {
@@ -263,7 +281,7 @@
       html.push('<span class="jv-filtros-grupo">');
       items.forEach(function (it) {
         var on = !!filtrosActivos[it[0]];
-        html.push('<button type="button" class="jv-chip' + (on ? " is-on" : "") + '" data-filtro="' + it[0] + '" aria-pressed="' + on + '" aria-label="' + it[1] + ", " + cuenta[it[0]] + (cuenta[it[0]] === 1 ? " promo" : " promos") + '">' + it[1] + '<span class="jv-chip-n">' + cuenta[it[0]] + "</span></button>");
+        html.push('<button type="button" class="jv-chip' + (on ? " is-on" : "") + '" data-filtro="' + it[0] + '" aria-pressed="' + on + '">' + it[1] + '<span class="jv-chip-n">' + cuenta[it[0]] + "</span></button>");
       });
       html.push("</span>");
     });
@@ -385,18 +403,26 @@
   var light = document.createElement("div");
   light.className = "jv-light";
   light.hidden = true;
+  light.setAttribute("role", "dialog");
+  light.setAttribute("aria-modal", "true");
+  light.setAttribute("aria-label", "Vista ampliada de la promoción");
   light.innerHTML = '<button type="button" class="jv-light-x" aria-label="Cerrar">&times;</button><img alt="">';
   document.body.appendChild(light);
+  var focoAntesDeZoom = null;
   function cerrarPieza() {
     light.hidden = true;
     document.body.style.overflow = "";
+    if (focoAntesDeZoom && focoAntesDeZoom.isConnected) focoAntesDeZoom.focus();
+    focoAntesDeZoom = null;
   }
   function abrirPieza(src, alt) {
+    focoAntesDeZoom = document.activeElement;
     var img = light.querySelector("img");
     img.src = src;
     img.alt = alt || "";
     light.hidden = false;
     document.body.style.overflow = "hidden";
+    light.querySelector(".jv-light-x").focus();
   }
   document.addEventListener("click", function (event) {
     var zoom = event.target.closest(".jv-zoom");
@@ -408,6 +434,9 @@
     if (event.target === light || event.target.classList.contains("jv-light-x")) cerrarPieza();
   });
   document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape" && !light.hidden) cerrarPieza();
+    if (light.hidden) return;
+    if (event.key === "Escape") { event.preventDefault(); cerrarPieza(); }
+    // El único control interactivo dentro del diálogo es cerrar.
+    if (event.key === "Tab") { event.preventDefault(); light.querySelector(".jv-light-x").focus(); }
   });
 })();
