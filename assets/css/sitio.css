@@ -1201,3 +1201,6 @@ html:has(> .landing-page) { scroll-behavior: smooth; }
 .jv-skip { position: fixed; inset: 12px auto auto 12px; z-index: 1100; padding: 12px 16px; color: #121212; background: #fff; }
 .jv-skip:not(:focus) { clip-path: inset(50%); }
 #contenido-principal { scroll-margin-top: var(--nx-nav-h, 0px); }
+
+/* QA móvil: evitar que el email largo del footer exceda su columna a 320–375px. */
+#footer a[href^="mailto:"] { overflow-wrap: anywhere; word-break: break-word; }
