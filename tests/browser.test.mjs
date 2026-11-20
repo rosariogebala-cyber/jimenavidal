@@ -30,6 +30,13 @@ for (const width of [320, 375, 768, 1024, 1440]) {
       await page.goto(url, { waitUntil: 'domcontentloaded' });
       await page.locator('h1').waitFor();
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      if (overflow > 2) {
+        const offenders = await page.evaluate(() => Array.from(document.querySelectorAll('body *')).map(el => {
+          const r = el.getBoundingClientRect();
+          return { tag: el.tagName, id: el.id, cls: typeof el.className === 'string' ? el.className.slice(0, 100) : '', left: Math.round(r.left), right: Math.round(r.right), width: Math.round(r.width) };
+        }).filter(x => x.right > innerWidth + 2 || x.left < -2).sort((a,b) => b.right - a.right).slice(0, 20));
+        console.log('OVERFLOW_DIAGNOSTIC_' + width, JSON.stringify(offenders));
+      }
       assert.ok(overflow <= 2, `Overflow horizontal: ${overflow}px`);
       assert.deepEqual(errors, [], 'Errores JS');
       await page.screenshot({ path: `qa-screenshots/jimena-${width}.png`, fullPage: true, animations: 'disabled', timeout: 30000 });
