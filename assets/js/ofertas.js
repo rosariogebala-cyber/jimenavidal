@@ -18,7 +18,7 @@
     "#productos .jv-incs{display:flex;flex-wrap:wrap;gap:6px 12px;margin:0 0 10px;font-size:.86rem}",
     "#productos .jv-inc{display:inline-flex;align-items:center;gap:.3em}",
     "#productos .jv-inc i{color:#e4570a}",
-    "#productos .prod-price s{opacity:.72;margin-right:.4em;font-weight:600;text-decoration:line-through}",
+    "#productos .prod-price s{opacity:1;color:#6a3f2a;margin-right:.4em;font-weight:600;text-decoration:line-through}",
     "#productos .prod-sale{margin:0 0 10px;font-size:.95rem}",
     "#productos .jv-cierre{width:100vw;margin:56px 0 0 calc(50% - 50vw);background:radial-gradient(62% 130% at 90% 0%,rgba(255,186,120,.55) 0%,transparent 58%),radial-gradient(48% 120% at 0% 100%,rgba(255,120,40,.42) 0%,transparent 60%),linear-gradient(115deg,#4a1608 0%,#b8430c 55%,#e4570a 100%)}",
     "#productos .nx-pad{padding-bottom:0}",
@@ -78,7 +78,7 @@
     "#preguntas-frecuentes .accordion-body{padding:0 0 22px;max-width:56ch;color:#3d4c60}",
     "#preguntas-frecuentes .jv-faq-cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 20px;margin-top:36px;padding:18px 18px 18px 24px;background:#fff;border-radius:999px;box-shadow:0 1px 2px rgba(11,31,56,.06),0 8px 24px rgba(11,31,56,.08)}",
     "#preguntas-frecuentes .jv-faq-cta h3{margin:0;font-family:Fraunces,Georgia,serif;font-weight:500;font-size:1.25rem;color:#0b1f38}",
-    "#preguntas-frecuentes .jv-faq-cta a{display:inline-flex;align-items:center;gap:.5em;padding:12px 22px;border-radius:999px;background:#e4570a;color:#fff;font-weight:600;text-decoration:none;transition:background .2s ease}",
+    "#preguntas-frecuentes .jv-faq-cta a{display:inline-flex;align-items:center;gap:.5em;padding:12px 22px;border-radius:999px;background:#b43d06;color:#fff;font-weight:600;text-decoration:none;transition:background .2s ease}",
     "#preguntas-frecuentes .jv-faq-cta a:hover,#preguntas-frecuentes .jv-faq-cta a:focus-visible{background:#c94a06;color:#fff}",
     "#preguntas-frecuentes .jv-faq-cta a i{transition:transform .2s ease}",
     "#preguntas-frecuentes .jv-faq-cta a:hover i{transform:translateX(3px)}",
@@ -95,6 +95,7 @@
     "#preguntas-frecuentes .jv-bags span{display:block;margin-top:4px;color:#e4570a;font-weight:700}",
     "#preguntas-frecuentes .jv-bags-note{margin:12px 0 0;font-size:.92rem}",
     "@media(min-width:992px){#preguntas-frecuentes .jv-bags{grid-template-columns:repeat(3,1fr)}#preguntas-frecuentes .jv-bags figure{grid-template-columns:1fr;align-items:start}}",
+    "#hero .carousel-indicators [data-bs-target]{height:4px;margin-left:8px;margin-right:8px}",
     "#hero .nx-hero-slide{overflow:hidden}",
     "#hero .nx-hero-slide::before{z-index:1}",
     "#hero .jv-quince .nx-hero-slide{background:#0b1f38}",
@@ -263,7 +264,7 @@
       html.push('<span class="jv-filtros-grupo">');
       items.forEach(function (it) {
         var on = !!filtrosActivos[it[0]];
-        html.push('<button type="button" class="jv-chip' + (on ? " is-on" : "") + '" data-filtro="' + it[0] + '" aria-pressed="' + on + '" aria-label="' + it[1] + ", " + cuenta[it[0]] + (cuenta[it[0]] === 1 ? " promo" : " promos") + '">' + it[1] + '<span class="jv-chip-n">' + cuenta[it[0]] + "</span></button>");
+        html.push('<button type="button" class="jv-chip' + (on ? " is-on" : "") + '" data-filtro="' + it[0] + '" aria-pressed="' + on + '">' + it[1] + '<span class="jv-chip-n">' + cuenta[it[0]] + "</span></button>");
       });
       html.push("</span>");
     });
