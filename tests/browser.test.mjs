@@ -67,9 +67,8 @@ test('Navegación comercial: carrusel, promociones y zoom', async () => {
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     const hero = page.locator('#heroJimena');
     assert.ok(await hero.count());
-    const first = await hero.locator('.carousel-item.active').getAttribute('class');
     await hero.locator('.carousel-control-next').click();
-    await page.waitForFunction(() => document.querySelector('#heroJimena .carousel-item.active')?.getAttribute('class') !== 'carousel-item active');
+    await page.waitForFunction(() => document.querySelector('#heroJimena .carousel-item:nth-child(2)')?.classList.contains('active'));
     assert.equal(await hero.locator('.carousel-item.active').count(), 1);
     const filters = page.locator('#productos [data-filtro]');
     await filters.first().waitFor();
