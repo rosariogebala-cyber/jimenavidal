@@ -59,3 +59,42 @@ test('FAQ: cambio de categoría informa el estado accesible', async () => {
     assert.equal(await buttons.nth(0).getAttribute('aria-pressed'), 'false');
   } finally { await ctx.close(); }
 });
+
+test('Navegación comercial: carrusel, promociones y zoom', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 375, height: 812 }, reducedMotion: 'reduce' });
+  const page = await ctx.newPage();
+  try {
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
+    const hero = page.locator('#heroJimena');
+    assert.ok(await hero.count());
+    const first = await hero.locator('.carousel-item.active').getAttribute('class');
+    await hero.locator('.carousel-control-next').click();
+    await page.waitForFunction(() => document.querySelector('#heroJimena .carousel-item.active')?.getAttribute('class') !== 'carousel-item active');
+    assert.equal(await hero.locator('.carousel-item.active').count(), 1);
+    const filters = page.locator('#productos [data-filtro]');
+    await filters.first().waitFor();
+    await filters.first().click();
+    assert.equal(await filters.first().getAttribute('aria-pressed'), 'true');
+    const promoWhatsapp = page.locator('#productos a[href^="https://wa.me/"]');
+    assert.ok((await promoWhatsapp.count()) > 0, 'Promociones deben permitir contacto');
+    const zoom = page.locator('#productos .jv-zoom:visible').first();
+    if (await zoom.count()) {
+      await zoom.click();
+      const dialog = page.locator('.jv-light[role="dialog"]');
+      assert.equal(await dialog.isVisible(), true);
+      await page.keyboard.press('Escape');
+      assert.equal(await dialog.isVisible(), false);
+    }
+  } finally { await ctx.close(); }
+});
+
+test('Panel de gestión inicia sin token y ofrece acceso sin guardar datos', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 375, height: 812 } });
+  const page = await ctx.newPage();
+  try {
+    const response = await page.goto(url + 'gestion/', { waitUntil: 'domcontentloaded' });
+    assert.equal(response.status(), 200);
+    assert.ok((await page.locator('input[type="password"]').count()) >= 1);
+    assert.equal((await page.locator('body').innerText()).includes('Clave de GitHub'), true);
+  } finally { await ctx.close(); }
+});
