@@ -54,3 +54,37 @@ jobs:
           name: capturas-jimena-responsive
           path: qa-screenshots/*.png
           if-no-files-found: warn
+  lighthouse:
+    name: Lighthouse Mobile y Desktop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: pip install -r herramientas/requirements.txt
+      - run: python herramientas/armar.py
+      - run: npm install --no-save --no-package-lock lighthouse
+      - name: Servidor local
+        run: |
+          python3 -m http.server 8890 -d _site --bind 127.0.0.1 > /tmp/jimena-server.log 2>&1 &
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8890/ -o /dev/null; then break; fi
+            sleep 1
+          done
+      - name: Medición móvil
+        run: npx lighthouse http://127.0.0.1:8890/ --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output=html --output-path=./lighthouse-mobile --quiet
+      - name: Medición escritorio
+        run: npx lighthouse http://127.0.0.1:8890/ --preset=desktop --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output=html --output-path=./lighthouse-desktop --quiet
+      - name: Guardar informes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-jimena
+          path: |
+            lighthouse-*.json
+            lighthouse-*.html
+          if-no-files-found: warn
