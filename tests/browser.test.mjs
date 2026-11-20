@@ -33,7 +33,7 @@ for (const width of [320, 375, 768, 1024, 1440]) {
       if (overflow > 2) {
         const offenders = await page.evaluate(() => Array.from(document.querySelectorAll('body *')).map(el => {
           const r = el.getBoundingClientRect();
-          return { tag: el.tagName, id: el.id, cls: typeof el.className === 'string' ? el.className.slice(0, 100) : '', left: Math.round(r.left), right: Math.round(r.right), width: Math.round(r.width) };
+          return { tag: el.tagName, id: el.id, cls: typeof el.className === 'string' ? el.className.slice(0, 100) : '', text: (el.innerText || '').slice(0, 70), parent: el.parentElement?.className?.toString().slice(0,80) || '', left: Math.round(r.left), right: Math.round(r.right), width: Math.round(r.width) };
         }).filter(x => x.right > innerWidth + 2 || x.left < -2).sort((a,b) => b.right - a.right).slice(0, 20));
         console.log('OVERFLOW_DIAGNOSTIC_' + width, JSON.stringify(offenders));
       }
