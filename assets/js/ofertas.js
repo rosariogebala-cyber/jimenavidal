@@ -141,11 +141,28 @@
       window.bootstrap.Carousel.getOrCreateInstance(heroCarrusel, { interval: false, ride: false, touch: true }).pause();
     }
   }
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    document.querySelectorAll("#productos video").forEach(function (video) {
-      video.removeAttribute("autoplay");
-      video.pause();
-    });
+  // Los videos de promociones son decorativos y pueden pesar varios MB.
+  // Descargar y reproducir solo cuando se ven. No modificar el JSON ni el panel.
+  var promoVideos = [].slice.call(document.querySelectorAll("#productos video[data-src]"));
+  var quietoPromos = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function activarVideoPromo(video) {
+    if (!video.src && video.dataset.src) {
+      video.src = video.dataset.src;
+      video.load();
+    }
+    var intento = video.play();
+    if (intento && intento.catch) intento.catch(function () {});
+  }
+  if (!quietoPromos && "IntersectionObserver" in window) {
+    var promoVideoObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) activarVideoPromo(entry.target);
+        else entry.target.pause();
+      });
+    }, { rootMargin: "50px 0px" });
+    promoVideos.forEach(function (video) { promoVideoObserver.observe(video); });
+  } else if (!quietoPromos) {
+    promoVideos.forEach(activarVideoPromo);
   }
 
   function subirDestacadas() {
