@@ -996,7 +996,7 @@ def promo_card(oid, src, alt, meta_html, title, price_html, includes_html, detai
     fechas = "".join(' data-%s="%s"' % (k, escape(v, quote=True)) for k, v in (("desde", desde), ("hasta", hasta)) if v)
     media = (
         '<div class="nx-frame ratio-1" style="position:relative;overflow:hidden">'
-        '<video autoplay muted loop playsinline preload="metadata" poster="%s" src="%s" aria-label="%s" width="1200" height="1200" style="display:block;width:100%%;height:100%%;object-fit:cover"></video>'
+        '<video muted loop playsinline preload="none" poster="%s" data-src="%s" aria-label="%s" width="1200" height="1200" style="display:block;width:100%%;height:100%%;object-fit:cover"></video>'
         '<img src="%s" alt="%s" width="1200" height="1200" decoding="async" style="position:absolute;inset:0;width:100%%;height:100%%;pointer-events:none">'
         '</div>'
         % (escape(src, quote=True), escape(video, quote=True), escape(title, quote=True), escape(overlay, quote=True), escape(alt, quote=True))
