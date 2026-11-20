@@ -91,6 +91,18 @@ class Publicado(unittest.TestCase):
         self.assertIn("python herramientas/armar.py", workflow)
         self.assertIn("actions/deploy-pages", workflow)
 
+    def test_videos_promociones_no_descargan_antes_de_tiempo(self):
+        # Los videos pueden ser enormes: deben esperar al IntersectionObserver.
+        import re
+        seccion = self.html.split('id="productos"', 1)[-1].split('id="resenas-de-google"', 1)[0]
+        videos = re.findall(r'<video[^>]*>', seccion)
+        self.assertTrue(videos, "El fixture publicado debe incluir promociones con video")
+        for video in videos:
+            self.assertIn('data-src=', video)
+            self.assertIn('preload="none"', video)
+            self.assertNotIn(' autoplay', video)
+            self.assertNotRegex(video, r'\\ssrc=')
+
     def test_archivos_publicacion(self):
         for f in ("robots.txt", "sitemap.xml", "assets/js/sitio.js", "assets/js/ofertas.js"):
             self.assertTrue((SITE / f).is_file(), f)
