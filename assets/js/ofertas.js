@@ -385,18 +385,26 @@
   var light = document.createElement("div");
   light.className = "jv-light";
   light.hidden = true;
+  light.setAttribute("role", "dialog");
+  light.setAttribute("aria-modal", "true");
+  light.setAttribute("aria-label", "Vista ampliada de la promoción");
   light.innerHTML = '<button type="button" class="jv-light-x" aria-label="Cerrar">&times;</button><img alt="">';
   document.body.appendChild(light);
+  var focoAntesDeZoom = null;
   function cerrarPieza() {
     light.hidden = true;
     document.body.style.overflow = "";
+    if (focoAntesDeZoom && focoAntesDeZoom.isConnected) focoAntesDeZoom.focus();
+    focoAntesDeZoom = null;
   }
   function abrirPieza(src, alt) {
+    focoAntesDeZoom = document.activeElement;
     var img = light.querySelector("img");
     img.src = src;
     img.alt = alt || "";
     light.hidden = false;
     document.body.style.overflow = "hidden";
+    light.querySelector(".jv-light-x").focus();
   }
   document.addEventListener("click", function (event) {
     var zoom = event.target.closest(".jv-zoom");
@@ -408,6 +416,9 @@
     if (event.target === light || event.target.classList.contains("jv-light-x")) cerrarPieza();
   });
   document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape" && !light.hidden) cerrarPieza();
+    if (light.hidden) return;
+    if (event.key === "Escape") { event.preventDefault(); cerrarPieza(); }
+    // El único control interactivo dentro del diálogo es cerrar.
+    if (event.key === "Tab") { event.preventDefault(); light.querySelector(".jv-light-x").focus(); }
   });
 })();
