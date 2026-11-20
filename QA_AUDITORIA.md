@@ -30,3 +30,13 @@
 ## Riesgos pendientes
 - Token personal de GitHub guardado en localStorage/sessionStorage por el navegador de gestión: evaluar autenticación por backend o GitHub App de permisos limitados antes de exponerlo a terceros. No se cambió en esta etapa.
 - Una prueba de extremo a extremo de guardado + despliegue real exige operar sobre GitHub y publicar; se excluye del QA no destructivo.
+
+## Resultado de QA tras optimización de video — ejecución #44776901806
+- **Build y validaciones estáticas:** success.
+- **Chromium, WCAG y responsive:** success a 320, 375, 768, 1024 y 1440 px. Sin desbordamiento horizontal y sin violaciones axe graves/críticas dentro de los criterios comprobados.
+- **Lighthouse Mobile/Desktop:** job success. Mobile Performance **57**, Accesibilidad **98**, Buenas prácticas **96**, SEO **100**. Desktop Performance **90**, Accesibilidad **98**, Buenas prácticas **96**, SEO **100**.
+- La puntuación sintética fluctúa (una corrida previa Mobile 74 y otra 45), por lo que no se atribuye una mejora de puntuación aislada a los cambios.
+- **Transferencia real inicial de Lighthouse Mobile:** pasó de **4.744 KiB** a **1.865 KiB**, una reducción de unos **2.879 KiB (61 %)** en las mediciones comparadas. El MP4 externo de 2.949.841 bytes dejó de aparecer entre las solicitudes de red del inicio. El video sigue configurado para reproducirse al entrar en la zona visible.
+- **LCP medido:** alrededor de 9,4 s en ambas corridas; continúa como oportunidad de mejora no bloqueante para el QA funcional. El hero usa WebP de ~26,6 KB con prioridad alta, por lo que no conviene modificarlo sin aislar el problema.
+- Capturas full-page de los cinco anchos generadas; inspección de primeros 1500 px a 320 y 1440 px sin roturas visuales apreciables. La revisión humana de toda la página, contenido y panel autenticado sigue pendiente.
+- **Publicación:** cambios aún en rama QA/PR borrador. No se modificaron `main` ni promociones reales.
