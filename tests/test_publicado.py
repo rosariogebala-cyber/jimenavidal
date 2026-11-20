@@ -70,6 +70,27 @@ class Publicado(unittest.TestCase):
         broken = [h for h in self.page.links if h and h not in self.page.ids]
         self.assertFalse(broken, "Anclas sin destino: " + ", ".join(broken))
 
+    def test_circuito_de_gestion_y_publicacion(self):
+        # El panel no es un backend tradicional: guarda con GitHub GraphQL
+        # en main y GitHub Actions genera _site y gestion/estado.json.
+        gestion = (SITE / "gestion" / "index.html").read_text(encoding="utf-8")
+        js = (SITE / "gestion" / "gestion.js").read_text(encoding="utf-8")
+        self.assertIn('data-entrar', gestion)
+        self.assertIn('var RAMA = "main"', js)
+        self.assertIn('datos/ofertas.json', js)
+        self.assertIn('datos/hero.json', js)
+        self.assertIn('datos/contacto.json', js)
+        self.assertIn('createCommitOnBranch', js)
+        self.assertIn('publicar.yml', js)
+        self.assertTrue((SITE / "gestion" / "estado.json").is_file())
+        import json
+        estado = json.loads((SITE / "gestion" / "estado.json").read_text(encoding="utf-8"))
+        self.assertIn("ofertas", estado)
+        self.assertIn("commit", estado)
+        workflow = (ROOT / ".github" / "workflows" / "publicar.yml").read_text(encoding="utf-8")
+        self.assertIn("python herramientas/armar.py", workflow)
+        self.assertIn("actions/deploy-pages", workflow)
+
     def test_archivos_publicacion(self):
         for f in ("robots.txt", "sitemap.xml", "assets/js/sitio.js", "assets/js/ofertas.js"):
             self.assertTrue((SITE / f).is_file(), f)
