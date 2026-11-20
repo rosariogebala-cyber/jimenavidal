@@ -79,6 +79,17 @@ jobs:
         run: npx lighthouse http://127.0.0.1:8890/ --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output=html --output-path=./lighthouse-mobile --quiet
       - name: Medición escritorio
         run: npx lighthouse http://127.0.0.1:8890/ --preset=desktop --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output=html --output-path=./lighthouse-desktop --quiet
+      - name: Resumen de métricas Lighthouse
+        run: |
+          python3 - <<'PY'
+          import json
+          for device in ('mobile', 'desktop'):
+              with open('lighthouse-%s.report.json' % device) as f:
+                  data = json.load(f)
+              scores = {key: round(data['categories'][key]['score'] * 100) for key in ('performance', 'accessibility', 'best-practices', 'seo')}
+              metrics = {key: round(data['audits'][key]['numericValue']) for key in ('largest-contentful-paint', 'first-contentful-paint', 'total-blocking-time')}
+              print(device.upper(), 'scores:', scores, 'times_ms:', metrics)
+          PY
       - name: Guardar informes
         if: always()
         uses: actions/upload-artifact@v4
