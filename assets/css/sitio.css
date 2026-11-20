@@ -1049,7 +1049,7 @@ body:not(.lib-page) .mq-block[data-width="contained"] > .mq-frame { margin-inlin
 
 @media (max-width: 767.98px) {
   .nx-hero .carousel-control-prev,
-  .nx-hero .carousel-control-next { top: auto; bottom: 14px; transform: none; }
+  .nx-hero .carousel-control-next { top: auto; bottom: 44px; transform: none; }
   .nx-hero .nx-hero-slide::before {
     background: linear-gradient(180deg, rgba(247, 244, 239, 0.94) 0%, rgba(247, 244, 239, 0.82) 36%, rgba(247, 244, 239, 0.3) 60%, rgba(247, 244, 239, 0) 80%);
   }
